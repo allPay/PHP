@@ -22,6 +22,11 @@
 
 		return md5($encode_str);
 	}
+    //仿自然排序法
+    function merchantSort($a,$b)
+	{
+		return strcasecmp($a, $b);
+	}
 //------------------------------------------交易輸入參數------------------------------------------------------
 //訂單編號
 $trade_no = "StageTest".time();
@@ -79,7 +84,7 @@ $form_array = array(
   );
   
      # 調整ksort排序規則--依自然排序法(大小寫不敏感)
-     ksort($form_array, SORT_NATURAL |SORT_FLAG_CASE);
+     uksort($form_array, 'merchantSort');
      # 取得 Mac Value
 	$form_array['CheckMacValue'] = _getMacValue($hash_key, $hash_iv, $form_array);
 
