@@ -15,3 +15,5 @@ allpay_invoice_qallowanceinvalid_demo.php	I.查詢折讓作廢明細
 allpay_invoice_invoicenotify_demo.php		J.發送通知
 allpay_invoice_triggerissue_demo.php		K.付款完成觸發或延遲開立發票
 --------------------------------------------------------------------------------------
+AllPay_Invoice.php				SDK程式
+--------------------------------------------------------------------------------------
