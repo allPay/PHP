@@ -1118,7 +1118,10 @@ class AllInOne {
                 unset($arParameters['InvType']);
             }
             
-            ksort($arParameters, SORT_NATURAL | SORT_FLAG_CASE);
+            // 資料排序
+			// php 5.3以下不支援
+			// ksort($arParameters, SORT_NATURAL | SORT_FLAG_CASE);
+			uksort($arParameters, array('AllInOne','merchantSort'));
 
             $szCheckMacValue = "HashKey=$this->HashKey";
             foreach ($arParameters as $key => $value) {
@@ -1636,5 +1639,12 @@ class AllInOne {
         return $rs;
     }
 
+    /**
+	* 自訂排序使用
+	*/
+	private static function merchantSort($a,$b)
+	{
+		return strcasecmp($a, $b);
+	}
     
 }
