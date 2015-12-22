@@ -1562,15 +1562,15 @@ class AllInvoice
 						}
 						
 						// *ItemPrice數字判斷
-		        			if ( !preg_match('/^[0-9]*$/', $value['ItemPrice']) )
+		        			if ( !preg_match('/^[-0-9]*$/', $value['ItemPrice']) )
 		        			{
-		        				array_push($arErrors, '20-25:Invalid ItemPrice.');
+		        				array_push($arErrors, '20-25:Invalid ItemPrice.A');
 		        			}
 		        			
 		        			// *ItemAmount數字判斷
-		        			if ( !preg_match('/^[0-9]*$/', $value['ItemAmount']) )
+		        			if ( !preg_match('/^[-0-9]*$/', $value['ItemAmount']) )
 		        			{
-		        				array_push($arErrors, '20-25:Invalid ItemAmount.');
+		        				array_push($arErrors, '20-25:Invalid ItemAmount.B');
 		        			}	
 		        		}	
 		        	}
