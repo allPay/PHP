@@ -220,8 +220,7 @@ abstract class NotifiedType
 
 class AllInvoice
 {	
-	public $TimeStamp 	= 0;
-	public $nInvCreateDate 	= 0;
+	public $TimeStamp 	= 0;			
 	public $MerchantID 	= '';
 	public $HashKey 	= '';
 	public $HashIV 		= '';
@@ -232,7 +231,7 @@ class AllInvoice
 	function __construct()
 	{
 	        $this->AllInvoice();
-	        $this->TimeStamp = time();
+	        $this->TimeStamp = time();		
 
 	        $this->Send = array(
 	            "RelateNumber" => '',
@@ -253,7 +252,6 @@ class AllInvoice
 	            "InvoiceRemark" => '',
 	            "Items" => array(),
 	            "InvType" => '',
-	            "InvCreateDate" => '',
 	            "vat" => VatType::Yes,
 	            "DelayFlag" => '',
 	            "DelayDay" => 0,
@@ -318,7 +316,7 @@ class AllInvoice
 			// 2.整理必要參數
 			$aSend_Info = $this->Send ;
 			
-			$aSend_Info['TimeStamp'] = $this->TimeStamp ;
+			$aSend_Info['TimeStamp'] = $this->TimeStamp ;		
 			$aSend_Info['MerchantID'] = $this->MerchantID ;
 
 			// 3.判斷動作類型
@@ -380,12 +378,6 @@ class AllInvoice
         			
         			unset($aSend_Info['Items']) ;
 
-        			// 如果沒有填入資料，則清除該欄位，預設為當下時間
-        			if($aSend_Info['InvCreateDate'] == '')
-        			{
-        				unset($aSend_Info['InvCreateDate']) ;
-        			}
-        			
 				// 3-3產生檢查碼
 				$aSend_CheckMac_Info = $aSend_Info ;
 				
@@ -405,7 +397,6 @@ class AllInvoice
 			if( $this->Invoice_Method == InvoiceMethod::INVOICE_DELAY )
 			{
 				// 3-1過濾不需要的項目
-				unset($aSend_Info['InvCreateDate']) ;
 				unset($aSend_Info['vat']) ;
 				unset($aSend_Info['InvoiceNo']) ;
 				unset($aSend_Info['AllowanceNotify']) ;
@@ -498,7 +489,6 @@ class AllInvoice
 				unset($aSend_Info['SalesAmount']) ;
 				unset($aSend_Info['InvoiceRemark']) ;
 				unset($aSend_Info['InvType']) ;
-				unset($aSend_Info['InvCreateDate']) ;
 				unset($aSend_Info['vat']) ;
 				unset($aSend_Info['DelayFlag']) ;
 				unset($aSend_Info['DelayDay']) ;
@@ -587,7 +577,6 @@ class AllInvoice
 				unset($aSend_Info['ItemTaxType']) ;
 				unset($aSend_Info['ItemAmount']) ;
 				unset($aSend_Info['InvType']) ;
-				unset($aSend_Info['InvCreateDate']) ;
 				unset($aSend_Info['vat']) ;
 				unset($aSend_Info['DelayFlag']) ;
 				unset($aSend_Info['DelayDay']) ;
@@ -648,7 +637,6 @@ class AllInvoice
 				unset($aSend_Info['ItemTaxType']) ;
 				unset($aSend_Info['ItemAmount']) ;
 				unset($aSend_Info['InvType']) ;
-				unset($aSend_Info['InvCreateDate']) ;
 				unset($aSend_Info['vat']) ;
 				unset($aSend_Info['DelayFlag']) ;
 				unset($aSend_Info['DelayDay']) ;
@@ -707,7 +695,6 @@ class AllInvoice
 				unset($aSend_Info['ItemTaxType']) ;
 				unset($aSend_Info['ItemAmount']) ;
 				unset($aSend_Info['InvType']) ;
-				unset($aSend_Info['InvCreateDate']) ;
 				unset($aSend_Info['vat']) ;
 				unset($aSend_Info['DelayFlag']) ;
 				unset($aSend_Info['DelayDay']) ;
@@ -770,7 +757,6 @@ class AllInvoice
 				unset($aSend_Info['ItemTaxType']) ;
 				unset($aSend_Info['ItemAmount']) ;
 				unset($aSend_Info['InvType']) ;
-				unset($aSend_Info['InvCreateDate']) ;
 				unset($aSend_Info['vat']) ;
 				unset($aSend_Info['DelayFlag']) ;
 				unset($aSend_Info['DelayDay']) ;
@@ -827,7 +813,6 @@ class AllInvoice
 				unset($aSend_Info['ItemTaxType']) ;
 				unset($aSend_Info['ItemAmount']) ;
 				unset($aSend_Info['InvType']) ;
-				unset($aSend_Info['InvCreateDate']) ;
 				unset($aSend_Info['vat']) ;
 				unset($aSend_Info['DelayFlag']) ;
 				unset($aSend_Info['DelayDay']) ;
@@ -879,7 +864,6 @@ class AllInvoice
 				unset($aSend_Info['ItemTaxType']) ;
 				unset($aSend_Info['ItemAmount']) ;
 				unset($aSend_Info['InvType']) ;
-				unset($aSend_Info['InvCreateDate']) ;
 				unset($aSend_Info['vat']) ;
 				unset($aSend_Info['DelayFlag']) ;
 				unset($aSend_Info['DelayDay']) ;
@@ -1592,11 +1576,7 @@ class AllInvoice
 	        // 檢查 A.一般開立發票
 		if( $this->Invoice_Method == InvoiceMethod::INVOICE )
 	        {
-	        	// 28.發票開立時間
-
-	        	// *UrlEncode
-	        	$this->Send['InvCreateDate'] = urlencode($this->Send['InvCreateDate']);
-	        	$this->Send['InvCreateDate'] = $this->Replace_Symbol($this->Send['InvCreateDate']) ;	
+	        	// 28.發票開立時間  已移除此參數
 
 	        	// 29.商品單價是否含稅(預設為含稅價)
 

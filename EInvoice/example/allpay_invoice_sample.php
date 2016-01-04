@@ -37,7 +37,6 @@ $ItemPrice		= isset($_POST['ItemPrice'])		? $_POST['ItemPrice']			: '';
 $ItemTaxType		= isset($_POST['ItemTaxType'])		? $_POST['ItemTaxType']			: '';
 $ItemAmount		= isset($_POST['ItemAmount'])		? $_POST['ItemAmount']			: '';
 $InvType		= isset($_POST['InvType'])		? $_POST['InvType']			: '';
-$InvCreateDate		= isset($_POST['InvCreateDate'])	? $_POST['InvCreateDate']		: '';
 $vat			= isset($_POST['vat'])			? $_POST['vat']				: '';
 $DelayFlag		= isset($_POST['DelayFlag'])		? $_POST['DelayFlag']			: '';
 $DelayDay		= isset($_POST['DelayDay'])		? $_POST['DelayDay']			: '';
@@ -152,7 +151,6 @@ if(!$bError && isset($_POST['Invoice_Method']))
 		$allpay_invoice->Send['SalesAmount'] 		= $SalesAmount;
 		$allpay_invoice->Send['InvoiceRemark'] 		= $InvoiceRemark;	
 		$allpay_invoice->Send['InvType'] 		= $InvType;
-		$allpay_invoice->Send['InvCreateDate'] 		= $InvCreateDate;
 		$allpay_invoice->Send['vat'] 			= $vat;
 		$allpay_invoice->Send['DelayFlag'] 		= $DelayFlag;
 		$allpay_invoice->Send['DelayDay'] 		= $DelayDay;
@@ -345,7 +343,7 @@ if(!$bError && isset($_POST['Invoice_Method']))
 						</select>
 					</td>
 					<th class="td-left" id="28" title="空值:否&#10;‧預設格式如下&#10;「yyyy-MM-dd HH:mm:ss」&#10;‧不得大於當下時間且限48小時以內的時間&#10;‧不帶此參數或此參數無值時，發票開立時間預設為當下時間">28.發票開立時間 InvCreateDate</th>
-					<td><input name="InvCreateDate" type="text" value="<?php echo $InvCreateDate ; ?>" size="50" /></td>
+					<td>1.0.3版 已經移除該參數</td>
 				</tr>
 				<tr>
 					<th class="td-left" id="29" title="空值:否&#10;‧固定給定下述預設值&#10;->若為含稅價，則VAL = '1'&#10;->若為未稅價時，則VAL = '0'&#10;‧不帶此參數或此參數無值時，預設為含稅價">29.商品單價是否含稅 vat</th>

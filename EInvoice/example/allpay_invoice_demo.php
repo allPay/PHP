@@ -24,11 +24,11 @@ try
 		$allpay_invoice->Send['RelateNumber'] 			= $RelateNumber ;
 		$allpay_invoice->Send['CustomerID'] 			= '' ;
 		$allpay_invoice->Send['CustomerIdentifier'] 		= '' ;
-		$allpay_invoice->Send['CustomerName'] 		='' ;
+		$allpay_invoice->Send['CustomerName'] 			='' ;
 		$allpay_invoice->Send['CustomerAddr'] 			= '' ;
-		$allpay_invoice->Send['CustomerPhone'] 		= '' ;
-		$allpay_invoice->Send['CustomerEmail'] 		= 'test@localhost.com' ;
-		$allpay_invoice->Send['ClearanceMark'] 		= '' ;
+		$allpay_invoice->Send['CustomerPhone'] 			= '' ;
+		$allpay_invoice->Send['CustomerEmail'] 			= 'test@localhost.com' ;
+		$allpay_invoice->Send['ClearanceMark'] 			= '' ;
 		$allpay_invoice->Send['Print'] 				= '0' ;
 		$allpay_invoice->Send['Donation'] 			= '2' ;
 		$allpay_invoice->Send['LoveCode'] 			= '' ;
@@ -36,9 +36,8 @@ try
 		$allpay_invoice->Send['CarruerNum'] 			= '' ;
 		$allpay_invoice->Send['TaxType'] 			= 1 ;
 		$allpay_invoice->Send['SalesAmount'] 			= 500 ;
-		$allpay_invoice->Send['InvoiceRemark'] 		= 'SDK TEST' ;	
-		$allpay_invoice->Send['InvType'] 				= '07' ;
-		$allpay_invoice->Send['InvCreateDate'] 			= '' ;
+		$allpay_invoice->Send['InvoiceRemark'] 			= 'SDK TEST' ;	
+		$allpay_invoice->Send['InvType'] 			= '07' ;
 		$allpay_invoice->Send['vat'] 				= '' ;
 // 4.送出
 		$aReturn_Info = $allpay_invoice->Check_Out();
