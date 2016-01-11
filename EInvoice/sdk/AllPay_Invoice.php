@@ -1,7 +1,7 @@
 <?php
 /*
 電子發票SDK
-版本:1.0.0
+版本:V1.0.3
 @author Wesley
 */
 
@@ -301,6 +301,7 @@ class AllInvoice
         	$sItemPrice		= '' ;		// 商品價格
         	$sItemTaxType		= '' ;		// 商品課稅別
         	$sItemAmount		= '' ;		// 商品合計
+        	$sItemRemark		= '' ;		// 商品備註	V1.0.3目前僅提供A.一般開立發票使用
         	$nItems_Foreach_Count	= 1 ;		// 商品計算
         	
 		// 參數檢查
@@ -349,12 +350,13 @@ class AllInvoice
 				$nItems_Count_Total = count($this->Send['Items']) ;	// 商品總筆數
 				foreach($this->Send['Items'] as $key => $value)
 	        		{
-	        			$sItemName .= $value['ItemName'] ;
-	        			$sItemCount .= (int) $value['ItemCount'] ;
-	        			$sItemWord .= $value['ItemWord'] ;
-	        			$sItemPrice .= (int) $value['ItemPrice'] ;
-	        			$sItemTaxType .= $value['ItemTaxType'] ;
-	        			$sItemAmount .= (int) $value['ItemAmount'] ;
+	        			$sItemName 	.= (isset($value['ItemName'])) 		? $value['ItemName'] 	: '' ;
+	        			$sItemCount 	.= (int) $value['ItemCount'] ;
+	        			$sItemWord 	.= (isset($value['ItemWord'])) 		? $value['ItemWord'] 	: '' ;
+	        			$sItemPrice 	.= (int) $value['ItemPrice'] ;		
+	        			$sItemTaxType 	.= (isset($value['ItemTaxType'])) 	? $value['ItemTaxType'] : '' ;
+	        			$sItemAmount	.= (int) $value['ItemAmount'] ;
+	        			$sItemRemark 	.= (isset($value['ItemRemark'])) 	? $value['ItemRemark'] 	: '' ;
 	        			
 	        			if( $nItems_Foreach_Count < $nItems_Count_Total )
 	        			{
@@ -364,6 +366,7 @@ class AllInvoice
 	        				$sItemPrice .= '|' ;
 	        				$sItemTaxType .= '|' ;
 	        				$sItemAmount .= '|' ;
+	        				$sItemRemark .= '|' ;
 	        			}
 
 	        			$nItems_Foreach_Count++ ; 	
@@ -375,6 +378,7 @@ class AllInvoice
         			$aSend_Info['ItemPrice'] 	= $sItemPrice ;
         			$aSend_Info['ItemTaxType'] 	= $sItemTaxType ;
         			$aSend_Info['ItemAmount'] 	= $sItemAmount ;
+        			$aSend_Info['ItemRemark'] 	= urlencode($sItemRemark) ;	// 商品備註
         			
         			unset($aSend_Info['Items']) ;
 
@@ -385,6 +389,7 @@ class AllInvoice
 				unset($aSend_CheckMac_Info['ItemName']) ;
 				unset($aSend_CheckMac_Info['ItemWord']) ;
 				unset($aSend_CheckMac_Info['InvoiceRemark']) ;
+				unset($aSend_CheckMac_Info['ItemRemark']) ;		// V1.0.3
 				
 				// 載具編號內包含+號則改為空白
 				$aSend_CheckMac_Info['CarruerNum'] = str_replace ('+',' ',$aSend_CheckMac_Info['CarruerNum']);
@@ -941,6 +946,7 @@ class AllInvoice
 						unset($aReturn_CheckMacValue['ItemName']) ;
 						unset($aReturn_CheckMacValue['ItemWord']) ;
 						unset($aReturn_CheckMacValue['InvoiceRemark']) ;
+						unset($aReturn_CheckMacValue['ItemRemark']) ;
 						
 						if($aReturn_Info['RtnCode'] == 1)
 						{
@@ -1483,7 +1489,7 @@ class AllInvoice
 		        		if($bFind_Tag != false || empty($value['ItemName']))
 		        		{
 		        			$bError_Tag = true ;
-		        			array_push($arErrors, '20-25:Invalid ItemName.');
+		        			array_push($arErrors, '20:Invalid ItemName.');
 		        			break;	
 		        		}
 		        		
@@ -1491,7 +1497,7 @@ class AllInvoice
 		        		if($bFind_Tag != false || empty($value['ItemCount']))
 		        		{
 		        			$bError_Tag = true ;
-		        			array_push($arErrors, '20-25:Invalid ItemCount.');
+		        			array_push($arErrors, '21:Invalid ItemCount.');
 		        			break;	
 		        		}
 		        		
@@ -1499,7 +1505,7 @@ class AllInvoice
 		        		if($bFind_Tag != false || empty($value['ItemWord']))
 		        		{
 		        			$bError_Tag = true ;
-		        			array_push($arErrors, '20-25:Invalid ItemWord.');
+		        			array_push($arErrors, '22:Invalid ItemWord.');
 		        			break;	
 		        		}
 		        		
@@ -1507,7 +1513,7 @@ class AllInvoice
 		        		if($bFind_Tag != false || empty($value['ItemPrice']))
 		        		{
 		        			$bError_Tag = true ;
-		        			array_push($arErrors, '20-25:Invalid ItemPrice.');
+		        			array_push($arErrors, '23:Invalid ItemPrice.');
 		        			break;	
 		        		}
 		        		
@@ -1515,7 +1521,7 @@ class AllInvoice
 		        		if($bFind_Tag != false || empty($value['ItemTaxType']))
 		        		{
 		        			$bError_Tag = true ;
-		        			array_push($arErrors, '20-25:Invalid ItemTaxType.');
+		        			array_push($arErrors, '24:Invalid ItemTaxType.');
 		        			break;	
 		        		}
 		        		
@@ -1523,9 +1529,21 @@ class AllInvoice
 		        		if($bFind_Tag != false || empty($value['ItemAmount']))
 		        		{
 		        			$bError_Tag = true ;
-		        			array_push($arErrors, '20-25:Invalid ItemAmount.');
+		        			array_push($arErrors, '25:Invalid ItemAmount.');
 		        			break;	
 		        		}
+		        		
+		        		// V1.0.3
+		        		if(isset($value['ItemRemark']))
+		        		{
+			        		$bFind_Tag = strpos($value['ItemRemark'], '|') ;
+			        		if($bFind_Tag != false || empty($value['ItemRemark']))
+			        		{
+			        			$bError_Tag = true ;
+			        			array_push($arErrors, '143:Invalid ItemRemark.');
+			        			break;	
+			        		}
+			        	}
 		        	}
 		        	
 		        	// 檢查商品格式
@@ -1536,26 +1554,37 @@ class AllInvoice
 		        			// *ItemCount數字判斷
 		        			if ( !preg_match('/^[0-9]*$/', $value['ItemCount']) )
 		        			{
-		        				array_push($arErrors, '20-25:Invalid ItemCount.');
+		        				array_push($arErrors, '21:Invalid ItemCount.');
 		        			}
 		        			
 		        			// *ItemWord 預設最大長度為6碼
 		        			if (strlen($value['ItemWord']) > 6 )
 						{
-							array_push($arErrors, '20-25:ItemWord max length as 6.');
+							array_push($arErrors, '22:ItemWord max length as 6.');
 						}
 						
 						// *ItemPrice數字判斷
 		        			if ( !preg_match('/^[-0-9]*$/', $value['ItemPrice']) )
 		        			{
-		        				array_push($arErrors, '20-25:Invalid ItemPrice.A');
+		        				array_push($arErrors, '23:Invalid ItemPrice.A');
 		        			}
 		        			
 		        			// *ItemAmount數字判斷
 		        			if ( !preg_match('/^[-0-9]*$/', $value['ItemAmount']) )
 		        			{
-		        				array_push($arErrors, '20-25:Invalid ItemAmount.B');
+		        				array_push($arErrors, '25:Invalid ItemAmount.B');
 		        			}	
+		        			
+		        			// V1.0.3
+		        			// *ItemRemark 預設最大長度為40碼 如果有此欄位才判斷
+		        			if(isset($value['ItemRemark']))
+		        			{
+			        			if (strlen($value['ItemRemark']) > 40 )
+							{
+								array_push($arErrors, '143:ItemWord max length as 40.');
+							}
+						}
+	
 		        		}	
 		        	}
 		        }

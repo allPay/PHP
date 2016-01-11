@@ -3,9 +3,9 @@
 /*
 電子發票測試介面
 串接電子發票SDK
-版本:1.0.0
+版本:1.0.3
 @author Wesley
-2015-11-10
+2016-1-11
 */
 
 $Invoice_Method		= isset($_POST['Invoice_Method'])	? $_POST['Invoice_Method']		: 'INVOICE';
@@ -57,6 +57,8 @@ $Phone			= isset($_POST['Phone'])		? $_POST['Phone']			: '';
 $Notify			= isset($_POST['Notify'])		? $_POST['Notify']			: '';
 $InvoiceTag		= isset($_POST['InvoiceTag'])		? $_POST['InvoiceTag']			: '';
 $Notified		= isset($_POST['Notified'])		? $_POST['Notified']			: '';
+
+$ItemRemark		= isset($_POST['ItemRemark'])		? $_POST['ItemRemark']			: '';
 
 $sMsg			= '';
 $bError			= false;
@@ -132,6 +134,8 @@ if(!$bError && isset($_POST['Invoice_Method']))
 		$aItems[0]['ItemPrice'] 			= $ItemPrice ;
 		$aItems[0]['ItemTaxType'] 			= $ItemTaxType ;
 		$aItems[0]['ItemAmount'] 			= $ItemAmount ;
+		$aItems[0]['ItemRemark'] 			= $ItemRemark ;
+		
 		$allpay_invoice->Send['Items'] 			= $aItems ;
 		
 		$allpay_invoice->Send['RelateNumber'] 		= $RelateNumber;
@@ -201,7 +205,7 @@ if(!$bError && isset($_POST['Invoice_Method']))
 </head>
 <body>
 	<div id="contain-primary">
-		<div class="contain-title">歐付寶電子發票串接測試</div>
+		<div class="contain-title">歐付寶電子發票串接測試 PHP V1.0.3</div>
 		<?php if(!empty($sMsg)){ echo '<div id="errormsg">' .$sMsg . '</div>' ; } ?>
 		<form name="form1" method="post" action="">
 			<table border="0" cellspacing="0" cellpadding="0" id="table-form">
@@ -334,6 +338,9 @@ if(!$bError && isset($_POST['Invoice_Method']))
 					<td><input name="ItemAmount" type="text" value="<?php echo $ItemAmount ; ?>" size="50" /></td>
 				</tr>
 				<tr>
+					<th class="td-left" id="143" title="空值:是&#10;‧預設格式如下&#10;備註1|備註2|備註3| … | 備註n&#10;‧若含二筆或以上的商品合計時，則以「|」符號區隔&#10;‧僅開放一般發票開立，單筆40最多字元">143.商品備註 ItemRemark</th>
+					<td><input name="ItemRemark" type="text" value="<?php echo $ItemRemark ; ?>" size="40" /></td>
+				
 					<th class="td-left" id="27" title="空值:否&#10;‧固定給定下述預設值&#10;->若為一般稅額計算時，則VAL = '07'&#10;->若為特種稅額計算時，則VAL = '08'">27.字軌類別 InvType</th>
 					<td>
 						<select name="InvType">
@@ -342,12 +349,13 @@ if(!$bError && isset($_POST['Invoice_Method']))
 							<option value="08" <?php if($InvType == '08'){echo 'selected' ; } ?>>08.特種稅額</option>
 						</select>
 					</td>
-					<th class="td-left" id="28" title="空值:否&#10;‧預設格式如下&#10;「yyyy-MM-dd HH:mm:ss」&#10;‧不得大於當下時間且限48小時以內的時間&#10;‧不帶此參數或此參數無值時，發票開立時間預設為當下時間">28.發票開立時間 InvCreateDate</th>
-					<td>1.0.3版 已經移除該參數</td>
+					
 				</tr>
 				<tr>
+					<th class="td-left" id="28" title="空值:否&#10;‧預設格式如下&#10;「yyyy-MM-dd HH:mm:ss」&#10;‧不得大於當下時間且限48小時以內的時間&#10;‧不帶此參數或此參數無值時，發票開立時間預設為當下時間">28.發票開立時間 InvCreateDate</th>
+					<td>1.0.3版 已經移除該參數</td>
 					<th class="td-left" id="29" title="空值:否&#10;‧固定給定下述預設值&#10;->若為含稅價，則VAL = '1'&#10;->若為未稅價時，則VAL = '0'&#10;‧不帶此參數或此參數無值時，預設為含稅價">29.商品單價是否含稅 vat</th>
-					<td colspan="3">
+					<td>
 						<select name="vat">
 							<option value="" <?php if($vat == ''){echo 'selected' ; } ?>>請選擇</option>
 							<option value="0" <?php if($vat == '0'){echo 'selected' ; } ?>>0.未稅價</option>
@@ -567,6 +575,9 @@ function ajax_query1()
 		document.getElementById( "47" ).className = "td-mark";
 		document.getElementById( "48" ).className = "td-mark";
 		document.getElementById( "49" ).className = "td-mark";
+		document.getElementById( "143" ).className = "td-left";
+		
+		
 		
 		document.getElementById("invoice_url").innerHTML = "http://einvoice-stage.allpay.com.tw/Invoice/Issue";
 	}
@@ -617,6 +628,7 @@ function ajax_query1()
 		document.getElementById( "47" ).className = "td-mark";
 		document.getElementById( "48" ).className = "td-mark";
 		document.getElementById( "49" ).className = "td-mark";
+		document.getElementById( "143" ).className = "td-mark";
 		document.getElementById("invoice_url").innerHTML = "http://einvoice-stage.allpay.com.tw/Invoice/DelayIssue";
 	}
 	
@@ -666,6 +678,7 @@ function ajax_query1()
 		document.getElementById( "47" ).className = "td-mark";
 		document.getElementById( "48" ).className = "td-mark";
 		document.getElementById( "49" ).className = "td-mark";
+		document.getElementById( "143" ).className = "td-mark";
 		document.getElementById("invoice_url").innerHTML = "http://einvoice-stage.allpay.com.tw/Invoice/Allowance";
 	}
 	
@@ -715,6 +728,7 @@ function ajax_query1()
 		document.getElementById( "47" ).className = "td-mark";
 		document.getElementById( "48" ).className = "td-mark";
 		document.getElementById( "49" ).className = "td-mark";
+		document.getElementById( "143" ).className = "td-mark";
 		document.getElementById("invoice_url").innerHTML = "http://einvoice-stage.allpay.com.tw/Invoice/IssueInvalid";
 	}
 	
@@ -764,6 +778,7 @@ function ajax_query1()
 		document.getElementById( "47" ).className = "td-mark";
 		document.getElementById( "48" ).className = "td-mark";
 		document.getElementById( "49" ).className = "td-mark";
+		document.getElementById( "143" ).className = "td-mark";
 		document.getElementById("invoice_url").innerHTML = "http://einvoice-stage.allpay.com.tw/Invoice/AllowanceInvalid";
 	}
 	
@@ -813,6 +828,7 @@ function ajax_query1()
 		document.getElementById( "47" ).className = "td-mark";
 		document.getElementById( "48" ).className = "td-mark";
 		document.getElementById( "49" ).className = "td-mark";
+		document.getElementById( "143" ).className = "td-mark";
 		
 		if(select_invoice == 'INVOICE_SEARCH' )
 		{
@@ -870,6 +886,7 @@ function ajax_query1()
 		document.getElementById( "47" ).className = "td-mark";
 		document.getElementById( "48" ).className = "td-mark";
 		document.getElementById( "49" ).className = "td-mark";
+		document.getElementById( "143" ).className = "td-mark";
 		
 		if(select_invoice == 'ALLOWANCE_SEARCH' )
 		{
@@ -927,6 +944,7 @@ function ajax_query1()
 		document.getElementById( "47" ).className = "td-left";
 		document.getElementById( "48" ).className = "td-left";
 		document.getElementById( "49" ).className = "td-left";
+		document.getElementById( "143" ).className = "td-mark";
 		
 		document.getElementById("invoice_url").innerHTML = "http://einvoice-stage.allpay.com.tw/Notify/InvoiceNotify";
 	}
@@ -977,6 +995,7 @@ function ajax_query1()
 		document.getElementById( "47" ).className = "td-mark";
 		document.getElementById( "48" ).className = "td-mark";
 		document.getElementById( "49" ).className = "td-mark";
+		document.getElementById( "143" ).className = "td-mark";
 		
 		document.getElementById("invoice_url").innerHTML = "http://einvoice-stage.allpay.com.tw/Invoice/TriggerIssue";
 	}
@@ -1033,6 +1052,7 @@ if(select_invoice == 'INVOICE')
 		document.getElementById( "47" ).className = "td-mark";
 		document.getElementById( "48" ).className = "td-mark";
 		document.getElementById( "49" ).className = "td-mark";
+		document.getElementById( "143" ).className = "td-mark";
 	}
 	
 	if(select_invoice == 'INVOICE_DELAY')
@@ -1081,6 +1101,7 @@ if(select_invoice == 'INVOICE')
 		document.getElementById( "47" ).className = "td-mark";
 		document.getElementById( "48" ).className = "td-mark";
 		document.getElementById( "49" ).className = "td-mark";
+		document.getElementById( "143" ).className = "td-mark";
 	}
 	
 	if(select_invoice == 'ALLOWANCE')
@@ -1129,6 +1150,7 @@ if(select_invoice == 'INVOICE')
 		document.getElementById( "47" ).className = "td-mark";
 		document.getElementById( "48" ).className = "td-mark";
 		document.getElementById( "49" ).className = "td-mark";
+		document.getElementById( "143" ).className = "td-mark";
 	}
 	
 	if(select_invoice == 'INVOICE_VOID')
@@ -1177,6 +1199,7 @@ if(select_invoice == 'INVOICE')
 		document.getElementById( "47" ).className = "td-mark";
 		document.getElementById( "48" ).className = "td-mark";
 		document.getElementById( "49" ).className = "td-mark";
+		document.getElementById( "143" ).className = "td-mark";
 	}
 	
 	if(select_invoice == 'ALLOWANCE_VOID')
@@ -1225,6 +1248,7 @@ if(select_invoice == 'INVOICE')
 		document.getElementById( "47" ).className = "td-mark";
 		document.getElementById( "48" ).className = "td-mark";
 		document.getElementById( "49" ).className = "td-mark";
+		document.getElementById( "143" ).className = "td-mark";
 	}
 	
 	if(select_invoice == 'INVOICE_SEARCH' || select_invoice == 'INVOICE_VOID_SEARCH')
@@ -1273,6 +1297,7 @@ if(select_invoice == 'INVOICE')
 		document.getElementById( "47" ).className = "td-mark";
 		document.getElementById( "48" ).className = "td-mark";
 		document.getElementById( "49" ).className = "td-mark";
+		document.getElementById( "143" ).className = "td-mark";
 	}
 	
 	if(select_invoice == 'ALLOWANCE_SEARCH' || select_invoice == 'ALLOWANCE_VOID_SEARCH')
@@ -1321,6 +1346,7 @@ if(select_invoice == 'INVOICE')
 		document.getElementById( "47" ).className = "td-mark";
 		document.getElementById( "48" ).className = "td-mark";
 		document.getElementById( "49" ).className = "td-mark";
+		document.getElementById( "143" ).className = "td-mark";
 	}
 	
 	if(select_invoice == 'INVOICE_NOTIFY')
@@ -1369,6 +1395,7 @@ if(select_invoice == 'INVOICE')
 		document.getElementById( "47" ).className = "td-left";
 		document.getElementById( "48" ).className = "td-left";
 		document.getElementById( "49" ).className = "td-left";
+		document.getElementById( "143" ).className = "td-mark";
 	}
 	
 	if(select_invoice == 'INVOICE_TRIGGER')
@@ -1417,6 +1444,7 @@ if(select_invoice == 'INVOICE')
 		document.getElementById( "47" ).className = "td-mark";
 		document.getElementById( "48" ).className = "td-mark";
 		document.getElementById( "49" ).className = "td-mark";
+		document.getElementById( "143" ).className = "td-mark";
 	}
 
 -->
