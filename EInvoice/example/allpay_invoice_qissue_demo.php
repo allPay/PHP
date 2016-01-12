@@ -12,7 +12,7 @@ try
 		$allpay_invoice->HashKey 		= 'ejCk326UnaZWKisg' ;
 		$allpay_invoice->HashIV 		= 'q9jcZX8Ib9LM8wYk' ;
 // 3.寫入發票傳送資訊
-		$allpay_invoice->Send['RelateNumber'] 	= 'ALLPAY201511231738201025284961'; // 廠商自訂編號
+		$allpay_invoice->Send['RelateNumber'] 	= 'ALLPAY201601112134252076398322'; // 廠商自訂編號
 // 4.送出
 		$aReturn_Info = $allpay_invoice->Check_Out();
 
