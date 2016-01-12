@@ -346,6 +346,12 @@
 				'Remark' => '',
 				'PlatformID' => ''
 			);
+            
+            // 幕後物流訂單建立不可設定Client端回覆網址(ClientReplyURL)
+            if (!empty($this->Send['ClientReplyURL'])) {
+                throw new Exception('ClientReplyURL should be null.');
+            }
+            
 			$this->PostParams = $this->GetPostParams($this->Send, $ParamList);
 			
 			// 參數檢查
@@ -460,9 +466,6 @@
 			$this->ValidateEmail('ReceiverEmail', $this->PostParams['ReceiverEmail'], 100, true);
 			$this->ValidateString('TradeDesc', $this->PostParams['TradeDesc'], 200, true);
 			$this->ValidateURL('ServerReplyURL', $this->PostParams['ServerReplyURL']);
-            if (!empty($this->PostParams['ClientReplyURL'])) {
-                throw new Exception('ClientReplyURL should be null.');
-            }
 			
 			if ($this->PostParams['LogisticsSubType'] == LogisticsSubType::UNIMART_C2C) {
 				// 物流子類型(LogisticsSubType)為統一超商交貨便(UNIMARTC2C)時，此欄位不可為空
@@ -478,7 +481,7 @@
 			$this->PostParams['CheckMacValue'] = $this->GenCheckMacValue($this->PostParams, $this->HashKey, $this->HashIV);
 			
             // 解析回傳結果
-            // 正確：1|MerchantID=XXX&MerchantTradeNo=XXX&RtnCode=XXX&RtnMsg=XXX&AllPayLogisticsID=XXX&LogisticsType=XXX&LogisticsSubType=XXX&GoodsAmount=XXX&UpdateStatusDate=XXX&ReceiverName=XXX&ReceiverPhone=XXX&ReceiverCellPhone=XXX&ReceiverEmail=XXX&ReceiverAddress=XXX&CVSPaymentNo=XXX &CVSValidationNo=XXX &CheckMacValue=XXX
+            // 正確：1|MerchantID=XXX&MerchantTradeNo=XXX&RtnCode=XXX&RtnMsg=XXX&AllPayLogisticsID=XXX&LogisticsType=XXX&LogisticsSubType=XXX&GoodsAmount=XXX&UpdateStatusDate=XXX&ReceiverName=XXX&ReceiverPhone=XXX&ReceiverCellPhone=XXX&ReceiverEmail=XXX&ReceiverAddress=XXX&CVSPaymentNo=XXX&CVSValidationNo=XXX &CheckMacValue=XXX
             // 錯誤：0|ErrorMessage
             $Feedback = $this->ServerPost($this->PostParams, $this->ServiceURL);
             $Pieces = explode('|', $Feedback);
@@ -487,7 +490,6 @@
             if ($Result['ResCode']) {
                 $RtnCont = array();
                 parse_str($Pieces[1], $RtnCont);
-                $this->CheckOutFeedback($RtnCont);
                 $Result = array_merge($Result, $RtnCont);
             } else {
                 $Result['ErrorMessage'] = $Pieces[1];
@@ -503,7 +505,7 @@
             $this->ValidateHashIV();
 			
 			if (empty($Feedback)) {
-				$Feedback = $_POST;
+				throw new Exception('Feedback is required.');
 			}
 			
 			if (!isset($Feedback['CheckMacValue'])) {
@@ -511,6 +513,8 @@
 			} else {
 				$FeedbackCheckMacValue = $Feedback['CheckMacValue'];
 				unset($Feedback['CheckMacValue']);
+				unset($Feedback['ResCode']);
+				unset($Feedback['ErrorMessage']);
 				$CheckMacValue = $this->GenCheckMacValue($Feedback, $this->HashKey, $this->HashIV);
 				if ($CheckMacValue != $FeedbackCheckMacValue) {
 					throw new Exception('CheckMacValue verify fail.');
@@ -838,7 +842,6 @@
 			$Result = array();
 			$Feedback = $this->ServerPost($this->PostParams, $this->ServiceURL);
 			parse_str($Feedback, $Result);
-			$this->CheckOutFeedback($Result);
 			
 			return $Result;
 		}
