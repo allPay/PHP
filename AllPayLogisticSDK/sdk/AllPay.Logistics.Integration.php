@@ -58,7 +58,7 @@
 	
     // 歐付寶正式測試環境網址
 	abstract class AllpayTestURL {
-		const CVS_MAP = 'http://logistics-stage.allpay.com.tw/Express/map';// 電子地圖
+        const CVS_MAP = 'https://logistics.allpay.com.tw/Express/map';// 電子地圖(測試環境有問題，直接使用正式環境URL)
 		const SHIPPING_ORDER = 'http://logistics-stage.allpay.com.tw/Express/Create';// 物流訂單建立
 		const HOME_RETURN_ORDER = 'http://logistics-stage.allpay.com.tw/Express/ReturnHome';// 宅配逆物流訂單
 		const FAMILY_RETURN_ORDER = 'http://logistics-stage.allpay.com.tw/express/ReturnCVS';// 超商取貨逆物流訂單(全家超商B2C)
