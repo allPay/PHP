@@ -1,7 +1,7 @@
 <?php
 /*
 電子發票SDK
-版本:V1.0.3
+版本:V1.0.0122
 @author Wesley
 */
 
@@ -43,6 +43,7 @@ abstract class InvoiceMethod
 }
 
 // 電子發票開立註記。
+/*
 abstract class InvoiceState
 {
 	// 需要開立電子發票。
@@ -51,6 +52,7 @@ abstract class InvoiceState
 	// 不需要開立電子發票。
 	const No = '';
 }
+*/
 
 // 電子發票載具類別
 abstract class CarruerType
