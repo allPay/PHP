@@ -395,6 +395,14 @@ abstract class InvType {
   const Special = '08';
 }
 
+abstract class EncryptType {
+    // MD5(預設)
+    const ENC_MD5 = 0;
+    
+    // SHA256
+    const ENC_SHA256 = 1;
+}
+
 /**
  * AllInOne short summary.
  *
@@ -416,6 +424,7 @@ class AllInOne {
     public $Query = 'Query';
     public $Action = 'Action';
     public $ChargeBack = 'ChargeBack';
+    public $EncryptType = EncryptType::ENC_MD5;
 
     function __construct() {
         $this->AllInOne();
@@ -437,7 +446,8 @@ class AllInOne {
             "IgnorePayment" => '',
             "PlatformID" => '',
             "InvoiceMark" => InvoiceState::No,
-            "Items" => array()
+            "Items" => array(),
+            "EncryptType" => EncryptType::ENC_MD5
         );
         $this->SendExtend = array(
             // ATM 延伸參數。
@@ -890,6 +900,11 @@ class AllInOne {
           }
         }
         
+        // 檢查CheckMacValue加密方式
+        if (strlen($this->Send['EncryptType']) > 1) {
+            array_push($arErrors, 'EncryptType max langth as 1.');
+        }
+        
         // 輸出表單字串。
         if (sizeof($arErrors) == 0) {
             // 信用卡特殊邏輯判斷(行動裝置畫面的信用卡分期處理，不支援定期定額)
@@ -1141,8 +1156,9 @@ class AllInOne {
             $szCheckMacValue = str_replace('%3f___sid%3d' . session_id(), '', $szCheckMacValue);
             $szCheckMacValue = str_replace('%3f___sid%3du', '', $szCheckMacValue);
             $szCheckMacValue = str_replace('%3f___sid%3ds', '', $szCheckMacValue);
-            // MD5 編碼
-            $szCheckMacValue = md5($szCheckMacValue);
+            
+            // CheckMacValue 壓碼
+            $szCheckMacValue = $this->EncCheckMacValue($szCheckMacValue, $this->Send['EncryptType']);
 
             $szHtml = '<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />';
             $szHtml .= '<div style="text-align:center;" ><form id="__allpayForm" method="post" target="' . $target . '" action="' . $this->ServiceURL . '">';
@@ -1220,8 +1236,14 @@ class AllInOne {
             $szConfirmMacValue = str_replace('%2a', '*', $szConfirmMacValue);
             $szConfirmMacValue = str_replace('%28', '(', $szConfirmMacValue);
             $szConfirmMacValue = str_replace('%29', ')', $szConfirmMacValue);
-            // MD5 編碼
-            $szConfirmMacValue = md5($szConfirmMacValue);
+            
+            // 檢查CheckMacValue加密方式
+            if (strlen($this->EncryptType) > 1) {
+                array_push($arErrors, 'EncryptType max langth as 1.');
+            }
+            
+            // CheckMacValue 壓碼
+            $szConfirmMacValue = $this->EncCheckMacValue($szConfirmMacValue, $this->EncryptType);
 
             if ($szCheckMacValue != strtoupper($szConfirmMacValue)) {
                 array_push($arErrors, 'CheckMacValue verify fail.');
@@ -1646,5 +1668,20 @@ class AllInOne {
 	{
 		return strcasecmp($a, $b);
 	}
+    
+    private function EncCheckMacValue($checkMacValue, $encType = EncryptType::ENC_MD5) {
+        $szCheckMacValue = $checkMacValue;
+        switch ($encType) {
+            case EncryptType::ENC_SHA256:
+                // SHA256 編碼
+                $szCheckMacValue = hash('sha256', $szCheckMacValue);
+                break;
+            case EncryptType::ENC_MD5:
+            default:
+                // MD5 編碼
+                $szCheckMacValue = md5($szCheckMacValue);
+        }
+        return $szCheckMacValue;
+    }
     
 }
