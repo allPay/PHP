@@ -1272,7 +1272,7 @@
 			curl_setopt($Curl, CURLOPT_HEADER, FALSE);
 			curl_setopt($Curl, CURLOPT_RETURNTRANSFER, TRUE);
             curl_setopt($Curl, CURLOPT_FOLLOWLOCATION, TRUE);
-			curl_setopt($Curl, CURLOPT_SSL_VERIFYPEER, FALSE);
+			curl_setopt($Curl, CURLOPT_SSL_VERIFYPEER, TRUE);
 			curl_setopt($Curl, CURLOPT_POST, TRUE);
 			curl_setopt($Curl, CURLOPT_POSTFIELDS, http_build_query($ParamList));
 			$Result = curl_exec($Curl);
