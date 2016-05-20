@@ -54,7 +54,7 @@
 
 
         //產生訂單(auto submit至AllPay)
-        $html = $obj->CheckOutString(null);
+        $html = $obj->CheckOut();
         echo $html;
     
     } catch (Exception $e) {
