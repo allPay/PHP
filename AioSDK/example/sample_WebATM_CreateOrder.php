@@ -51,7 +51,7 @@
 
         //產生訂單(auto submit至AllPay)
         //$obj->CheckOut();
-       echo $obj->CheckOutString('fuck');
+       echo $obj->CheckOut();
 
     
     } catch (Exception $e) {
