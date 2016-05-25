@@ -477,7 +477,7 @@ class AllInOne extends Aio{
             "Remark"            => '',
             "ChooseSubPayment"  => PaymentMethodItem::None,
             "NeedExtraPaidInfo" => ExtraPaymentInfo::No,
-            "DeviceSource"      => DeviceType::PC,
+            "DeviceSource"      => '',
             "IgnorePayment"     => '',
             "PlatformID"        => '',
             "InvoiceMark"       => InvoiceState::No,
@@ -1725,9 +1725,6 @@ Abstract class Verification
         }
         if (strlen($arParameters['NeedExtraPaidInfo']) == 0) {
             array_push($arErrors, 'NeedExtraPaidInfo is required.');
-        }
-        if (strlen($arParameters['DeviceSource']) == 0) {
-            array_push($arErrors, 'DeviceSource is required.');
         }
         if (sizeof($arParameters['Items']) == 0) {
             array_push($arErrors, 'Items is required.');
