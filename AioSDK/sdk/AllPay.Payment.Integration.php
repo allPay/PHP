@@ -191,11 +191,6 @@ abstract class PaymentMethodItem {
      * 儲值/餘額消費(歐付寶)
      */
     const TopUpUsed_AllPay = 'AllPay';
-
-    /**
-     * 儲值/餘額消費(玉山)
-     */
-    const TopUpUsed_ESUN = 'ESUN';
     // 其他類(901~999)
     /**
      * 超商條碼繳款。
