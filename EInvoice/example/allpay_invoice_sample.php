@@ -5,65 +5,71 @@
 串接電子發票SDK
 版本:1.0.3
 @author Wesley
-2016-1-11
+2016-01-11 範例程式建立
+2016-05-19 增加安全檢查filtervar函式
 */
 
-$Invoice_Method		= isset($_POST['Invoice_Method'])	? $_POST['Invoice_Method']		: 'INVOICE';
+// 傳入參數安全檢查
+foreach ($_POST as $key => $value)
+{
+	$VAR_POST[$key] = filtervar($value);
+}
+
+$Invoice_Method		= isset($VAR_POST['Invoice_Method'])	? $VAR_POST['Invoice_Method']		: 'INVOICE';
 $Invoice_Url		= '' ;
-$sAllpay_Merchant_Id	= isset($_POST['allpay_merchant_id'])	? $_POST['allpay_merchant_id']		: '2000132';
-$sAllpay_Hash_Key	= isset($_POST['allpay_hash_key'])	? $_POST['allpay_hash_key']		: 'ejCk326UnaZWKisg';
-$sAllpay_Hash_Iv	= isset($_POST['allpay_hash_iv'])	? $_POST['allpay_hash_iv']		: 'q9jcZX8Ib9LM8wYk';
+$sAllpay_Merchant_Id	= isset($VAR_POST['allpay_merchant_id'])? $VAR_POST['allpay_merchant_id']	: '2000132';
+$sAllpay_Hash_Key	= isset($VAR_POST['allpay_hash_key'])	? $VAR_POST['allpay_hash_key']		: 'ejCk326UnaZWKisg';
+$sAllpay_Hash_Iv	= isset($VAR_POST['allpay_hash_iv'])	? $VAR_POST['allpay_hash_iv']		: 'q9jcZX8Ib9LM8wYk';
 
-$RelateNumber		= isset($_POST['RelateNumber'])		? $_POST['RelateNumber']		: '';
-$CustomerID		= isset($_POST['CustomerID'])		? $_POST['CustomerID']			: '';
-$CustomerIdentifier	= isset($_POST['CustomerIdentifier'])	? $_POST['CustomerIdentifier']		: '';
-$CustomerName		= isset($_POST['CustomerName'])		? $_POST['CustomerName']		: '';
-$CustomerAddr		= isset($_POST['CustomerAddr'])		? $_POST['CustomerAddr']		: '';
-$CustomerPhone		= isset($_POST['CustomerPhone'])	? $_POST['CustomerPhone']		: '';
-$CustomerEmail		= isset($_POST['CustomerEmail'])	? $_POST['CustomerEmail']		: '';
-$ClearanceMark		= isset($_POST['ClearanceMark'])	? $_POST['ClearanceMark']		: '';
-$Print			= isset($_POST['Print'])		? $_POST['Print']			: '';
-$Donation		= isset($_POST['Donation'])		? $_POST['Donation']			: '';
-$LoveCode		= isset($_POST['LoveCode'])		? $_POST['LoveCode']			: '';
-$CarruerType		= isset($_POST['CarruerType'])		? $_POST['CarruerType']			: '';
-$CarruerNum		= isset($_POST['CarruerNum'])		? $_POST['CarruerNum']			: '';
-$TaxType		= isset($_POST['TaxType'])		? $_POST['TaxType']			: '';
-$SalesAmount		= isset($_POST['SalesAmount'])		? $_POST['SalesAmount']			: '';
-$InvoiceRemark		= isset($_POST['InvoiceRemark'])	? $_POST['InvoiceRemark']		: '';
-$ItemName		= isset($_POST['ItemName'])		? $_POST['ItemName']			: '';
-$ItemCount		= isset($_POST['ItemCount'])		? $_POST['ItemCount']			: '';
-$ItemWord		= isset($_POST['ItemWord'])		? $_POST['ItemWord']			: '';
-$ItemPrice		= isset($_POST['ItemPrice'])		? $_POST['ItemPrice']			: '';
-$ItemTaxType		= isset($_POST['ItemTaxType'])		? $_POST['ItemTaxType']			: '';
-$ItemAmount		= isset($_POST['ItemAmount'])		? $_POST['ItemAmount']			: '';
-$InvType		= isset($_POST['InvType'])		? $_POST['InvType']			: '';
-$vat			= isset($_POST['vat'])			? $_POST['vat']				: '';
-$DelayFlag		= isset($_POST['DelayFlag'])		? $_POST['DelayFlag']			: '';
-$DelayDay		= isset($_POST['DelayDay'])		? $_POST['DelayDay']			: '';
-$ECBankID		= isset($_POST['ECBankID'])		? $_POST['ECBankID']			: '';
-$Tsr			= isset($_POST['Tsr'])			? $_POST['Tsr']				: '';
-$PayType		= isset($_POST['PayType'])		? $_POST['PayType']			: '';
-$PayAct			= isset($_POST['PayAct'])		? $_POST['PayAct']			: '';
-$NotifyURL		= isset($_POST['NotifyURL'])		? $_POST['NotifyURL']			: '';
-$InvoiceNo		= isset($_POST['InvoiceNo'])		? $_POST['InvoiceNo']			: '';
-$AllowanceNotify	= isset($_POST['AllowanceNotify'])	? $_POST['AllowanceNotify']		: '';
-$NotifyMail		= isset($_POST['NotifyMail'])		? $_POST['NotifyMail']			: '';
-$NotifyPhone		= isset($_POST['NotifyPhone'])		? $_POST['NotifyPhone']			: '';
-$AllowanceAmount	= isset($_POST['AllowanceAmount'])	? $_POST['AllowanceAmount']		: '';
-$InvoiceNumber		= isset($_POST['InvoiceNumber'])	? $_POST['InvoiceNumber']		: '';
-$Reason			= isset($_POST['Reason'])		? $_POST['Reason']			: '';
-$AllowanceNo		= isset($_POST['AllowanceNo'])		? $_POST['AllowanceNo']			: '';
-$Phone			= isset($_POST['Phone'])		? $_POST['Phone']			: '';
-$Notify			= isset($_POST['Notify'])		? $_POST['Notify']			: '';
-$InvoiceTag		= isset($_POST['InvoiceTag'])		? $_POST['InvoiceTag']			: '';
-$Notified		= isset($_POST['Notified'])		? $_POST['Notified']			: '';
-
-$ItemRemark		= isset($_POST['ItemRemark'])		? $_POST['ItemRemark']			: '';
+$RelateNumber		= isset($VAR_POST['RelateNumber'])	? $VAR_POST['RelateNumber']		: '';
+$CustomerID		= isset($VAR_POST['CustomerID'])	? $VAR_POST['CustomerID']		: '';
+$CustomerIdentifier	= isset($VAR_POST['CustomerIdentifier'])? $VAR_POST['CustomerIdentifier']	: '';
+$CustomerName		= isset($VAR_POST['CustomerName'])	? $VAR_POST['CustomerName']		: '';
+$CustomerAddr		= isset($VAR_POST['CustomerAddr'])	? $VAR_POST['CustomerAddr']		: '';
+$CustomerPhone		= isset($VAR_POST['CustomerPhone'])	? $VAR_POST['CustomerPhone']		: '';
+$CustomerEmail		= isset($VAR_POST['CustomerEmail'])	? $VAR_POST['CustomerEmail']		: '';
+$ClearanceMark		= isset($VAR_POST['ClearanceMark'])	? $VAR_POST['ClearanceMark']		: '';
+$Print			= isset($VAR_POST['Print'])		? $VAR_POST['Print']			: '';
+$Donation		= isset($VAR_POST['Donation'])		? $VAR_POST['Donation']			: '';
+$LoveCode		= isset($VAR_POST['LoveCode'])		? $VAR_POST['LoveCode']			: '';
+$CarruerType		= isset($VAR_POST['CarruerType'])	? $VAR_POST['CarruerType']		: '';
+$CarruerNum		= isset($VAR_POST['CarruerNum'])	? $VAR_POST['CarruerNum']		: '';
+$TaxType		= isset($VAR_POST['TaxType'])		? $VAR_POST['TaxType']			: '';
+$SalesAmount		= isset($VAR_POST['SalesAmount'])	? $VAR_POST['SalesAmount']		: '';
+$InvoiceRemark		= isset($VAR_POST['InvoiceRemark'])	? $VAR_POST['InvoiceRemark']		: '';
+$ItemName		= isset($VAR_POST['ItemName'])		? $VAR_POST['ItemName']			: '';
+$ItemCount		= isset($VAR_POST['ItemCount'])		? $VAR_POST['ItemCount']		: '';
+$ItemWord		= isset($VAR_POST['ItemWord'])		? $VAR_POST['ItemWord']			: '';
+$ItemPrice		= isset($VAR_POST['ItemPrice'])		? $VAR_POST['ItemPrice']		: '';
+$ItemTaxType		= isset($VAR_POST['ItemTaxType'])	? $VAR_POST['ItemTaxType']		: '';
+$ItemAmount		= isset($VAR_POST['ItemAmount'])	? $VAR_POST['ItemAmount']		: '';
+$InvType		= isset($VAR_POST['InvType'])		? $VAR_POST['InvType']			: '';
+$vat			= isset($VAR_POST['vat'])		? $VAR_POST['vat']			: '';
+$DelayFlag		= isset($VAR_POST['DelayFlag'])		? $VAR_POST['DelayFlag']		: '';
+$DelayDay		= isset($VAR_POST['DelayDay'])		? $VAR_POST['DelayDay']			: '';
+$ECBankID		= isset($VAR_POST['ECBankID'])		? $VAR_POST['ECBankID']			: '';
+$Tsr			= isset($VAR_POST['Tsr'])		? $VAR_POST['Tsr']			: '';
+$PayType		= isset($VAR_POST['PayType'])		? $VAR_POST['PayType']			: '';
+$PayAct			= isset($VAR_POST['PayAct'])		? $VAR_POST['PayAct']			: '';
+$NotifyURL		= isset($VAR_POST['NotifyURL'])		? $VAR_POST['NotifyURL']		: '';
+$InvoiceNo		= isset($VAR_POST['InvoiceNo'])		? $VAR_POST['InvoiceNo']		: '';
+$AllowanceNotify	= isset($VAR_POST['AllowanceNotify'])	? $VAR_POST['AllowanceNotify']		: '';
+$NotifyMail		= isset($VAR_POST['NotifyMail'])	? $VAR_POST['NotifyMail']		: '';
+$NotifyPhone		= isset($VAR_POST['NotifyPhone'])	? $VAR_POST['NotifyPhone']		: '';
+$AllowanceAmount	= isset($VAR_POST['AllowanceAmount'])	? $VAR_POST['AllowanceAmount']		: '';
+$InvoiceNumber		= isset($VAR_POST['InvoiceNumber'])	? $VAR_POST['InvoiceNumber']		: '';
+$Reason			= isset($VAR_POST['Reason'])		? $VAR_POST['Reason']			: '';
+$AllowanceNo		= isset($VAR_POST['AllowanceNo'])	? $VAR_POST['AllowanceNo']		: '';
+$Phone			= isset($VAR_POST['Phone'])		? $VAR_POST['Phone']			: '';
+$Notify			= isset($VAR_POST['Notify'])		? $VAR_POST['Notify']			: '';
+$InvoiceTag		= isset($VAR_POST['InvoiceTag'])	? $VAR_POST['InvoiceTag']		: '';
+$Notified		= isset($VAR_POST['Notified'])		? $VAR_POST['Notified']			: '';
+$ItemRemark		= isset($VAR_POST['ItemRemark'])	? $VAR_POST['ItemRemark']		: '';
 
 $sMsg			= '';
 $bError			= false;
 
-if (isset($_POST['Invoice_Method']))
+if (isset($VAR_POST['Invoice_Method']))
 {
 	// 判斷
 	switch ($Invoice_Method)
@@ -111,7 +117,7 @@ if (isset($_POST['Invoice_Method']))
 
 }
 
-if(!$bError && isset($_POST['Invoice_Method']))
+if(!$bError && isset($VAR_POST['Invoice_Method']))
 {	
 	
 	try
@@ -193,7 +199,15 @@ if(!$bError && isset($_POST['Invoice_Method']))
 
 }	
 
-
+// 驗證傳入參數是否符合安全性
+function filtervar($sPost_Data)
+{
+	/**
+	* 您可以在此函式中，判斷資料格式是否符合程式需求，避免有心人利用$_POST元素進行XSS或是SQL Injection等攻擊。
+	*/
+	
+	return $sPost_Data;
+}
 ?>
 
 

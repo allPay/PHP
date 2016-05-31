@@ -2070,7 +2070,7 @@ class AllInvoice
 	        curl_setopt($ch, CURLOPT_URL, $this->Invoice_Url);
 	        curl_setopt($ch, CURLOPT_HEADER, FALSE);
 	        curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
-	        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, FALSE);
+	        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, TRUE);
 	        curl_setopt($ch, CURLOPT_POST, TRUE);
 	        curl_setopt($ch, CURLOPT_POSTFIELDS, $sSend_Info);
 		

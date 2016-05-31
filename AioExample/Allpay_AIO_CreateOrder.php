@@ -1,4 +1,4 @@
-﻿<?php
+<?php
    //特殊字元置換
 	function _replaceChar($value)
 	{
@@ -19,7 +19,6 @@
 		$encode_str .= "&HashIV=" . $hash_iv;
 		$encode_str = strtolower(urlencode($encode_str));
 		$encode_str = _replaceChar($encode_str);
-
 		return md5($encode_str);
 	}
     //仿自然排序法
@@ -61,7 +60,6 @@ $hash_key = "5294y06JbISpM5x9";
 //HashIV
 $hash_iv = "v77hoKGq4kWxNNIS";
 /********************************************************************************************/
-
 $form_array = array(
     "MerchantID" => $merchant_id,
     "MerchantTradeNo" => $trade_no,
@@ -74,20 +72,12 @@ $form_array = array(
     "ChoosePayment" => $choose_payment,
    "ClientBackURL" => $client_back_url,
 	"NeedExtraPaidInfo" => $needExtraPaidInfo,
-	# Alipay 必要參數
-	"AlipayItemName" => $alipay_item_name,
-	"AlipayItemCounts" => $alipay_item_counts,
-	"AlipayItemPrice" => $alipay_item_price,
-	"Email" => $alipay_email,
-	"PhoneNo" => $alipay_phone_no,
-	"UserName" => $alipay_user_name
   );
   
      # 調整ksort排序規則--依自然排序法(大小寫不敏感)
      uksort($form_array, 'merchantSort');
      # 取得 Mac Value
 	$form_array['CheckMacValue'] = _getMacValue($hash_key, $hash_iv, $form_array);
-
 	
 $html_code = '<form target="_blank" method=post action="' . $gateway_url . '">';
 foreach ($form_array as $key => $val) {
