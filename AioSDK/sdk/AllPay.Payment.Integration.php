@@ -217,6 +217,11 @@ abstract class PaymentMethodItem {
      * 儲值/餘額消費(歐付寶)
      */
     const TopUpUsed_AllPay = 'AllPay';
+
+    /**
+     * 儲值/餘額消費(玉山)
+     */
+    const TopUpUsed_ESUN = 'ESUN';
     // 其他類(901~999)
     /**
      * 超商條碼繳款。
@@ -437,12 +442,12 @@ abstract class UseRedeem{
  *
  * AllInOne description.
  *
- * @version 1.0
- * @author andy.chao
+ * @version 1.1.0527
+ * @author charlie
  */
 
 
-class AllInOne extends Aio{
+class AllInOne {
 
     public $ServiceURL = 'ServiceURL';
     public $ServiceMethod = 'ServiceMethod';
@@ -458,6 +463,7 @@ class AllInOne extends Aio{
     public $EncryptType = EncryptType::ENC_MD5;
 
     function __construct() {
+
         $this->PaymentType = 'aio';
         $this->Send = array(
             "ReturnURL"         => '',
@@ -492,357 +498,67 @@ class AllInOne extends Aio{
         $this->ChargeBack = Array(
             'MerchantTradeNo' => '', 'TradeNo' => '', 'ChargeBackTotalAmount' => 0, 'Remark' => ''
         );
+        $this->Capture = array();
+        
     }
 
     //產生訂單
     function CheckOut($target = "_self") {
-        $arParameters = array('MerchantID' => $this->MerchantID);
-        $arParameters = array_merge($arParameters ,$this->Send);
-        
-        $obj = new Send($arParameters,$this->SendExtend,$this->ServiceURL,$this->HashKey,$this->HashIV);
-        $obj->CheckOut($target);
+        $arParameters = array_merge( array('MerchantID' => $this->MerchantID) ,$this->Send);
+        Send::CheckOut($target,$arParameters,$this->SendExtend,$this->HashKey,$this->HashIV,$this->ServiceURL);
     }
 
     //產生訂單html code
     function CheckOutString($paymentButton = null, $target = "_self") {
-        $arParameters = array('MerchantID' => $this->MerchantID);
-        $arParameters = array_merge($arParameters ,$this->Send);
-        
-        $obj = new Send($arParameters,$this->SendExtend,$this->ServiceURL,$this->HashKey,$this->HashIV);
-        $szHtml = $obj->CheckOutString($paymentButton,$target = "_self");
-        return $szHtml ;
-   
+        $arParameters = array_merge( array('MerchantID' => $this->MerchantID) ,$this->Send);
+        return Send::CheckOutString($paymentButton,$target = "_self",$arParameters,$this->SendExtend,$this->ServiceURL,$this->HashKey,$this->HashIV);
     }
 
     //取得付款結果通知的方法
     function CheckOutFeedback() {
-        // 變數宣告。
-        $arErrors = array();
-        $arParameters = array();
-        $arFeedback = array();
-        $szCheckMacValue = '';
-        // 重新整理回傳參數。
-        foreach ($_POST as $keys => $value) {
-            if ($keys != 'CheckMacValue') {
-                if ($keys == 'PaymentType') {
-                    $value = str_replace('_CVS', '', $value);
-                    $value = str_replace('_BARCODE', '', $value);
-                    $value = str_replace('_Alipay', '', $value);
-                    $value = str_replace('_Tenpay', '', $value);
-                    $value = str_replace('_CreditCard', '', $value);
-                }
-                if ($keys == 'PeriodType') {
-                    $value = str_replace('Y', 'Year', $value);
-                    $value = str_replace('M', 'Month', $value);
-                    $value = str_replace('D', 'Day', $value);
-                }
-                $arFeedback[$keys] = $value;
-            }
-        }
-
-        //整理回傳的參數，過濾掉checkmacvalue
-        $arParameters = $_POST;
-        unset($arParameters['CheckMacValue']);
-
-        $CheckMacValue = $this->generateCheckMacValue($arParameters,$this->HashKey,$this->HashIV,0);
-
-        if ($CheckMacValue != $_POST['CheckMacValue']) {
-            array_push($arErrors, 'CheckMacValue verify fail.');
-        }
-
-        if (sizeof($arErrors) > 0) {
-            throw new Exception(join('- ', $arErrors));
-        }
-
-        return $arFeedback;    
+        return $arFeedback = CheckOutFeedback::CheckOut($_POST,$this->HashKey,$this->HashIV,0);   
     }
 
     //訂單查詢作業
     function QueryTradeInfo() {
-        $arErrors = array();
-        $this->Query['TimeStamp'] = time();
-        $arFeedback = array();
-        $arConfirmArgs = array();
-        // 檢查資料。
-        if (strlen($this->ServiceURL) == 0) {
-            array_push($arErrors, 'ServiceURL is required.');
-        }
-        if (strlen($this->ServiceURL) > 200) {
-            array_push($arErrors, 'ServiceURL max langth as 200.');
-        }
-        if (strlen($this->HashKey) == 0) {
-            array_push($arErrors, 'HashKey is required.');
-        }
-        if (strlen($this->HashIV) == 0) {
-            array_push($arErrors, 'HashIV is required.');
-        }
-        if (strlen($this->MerchantID) == 0) {
-            array_push($arErrors, 'MerchantID is required.');
-        }
-        if (strlen($this->MerchantID) > 10) {
-            array_push($arErrors, 'MerchantID max langth as 10.');
-        }
-        if (strlen($this->Query['MerchantTradeNo']) == 0) {
-            array_push($arErrors, 'MerchantTradeNo is required.');
-        }
-        if (strlen($this->Query['MerchantTradeNo']) > 20) {
-            array_push($arErrors, 'MerchantTradeNo max langth as 20.');
-        }
-        if (strlen($this->Query['TimeStamp']) == 0) {
-            array_push($arErrors, 'TimeStamp is required.');
-        }
-        // 呼叫查詢。
-        if (sizeof($arErrors) == 0) {
-            $arParameters = array("MerchantID" => $this->MerchantID);
-            $arParameters = array_merge($arParameters, $this->Query);
-
-            $szCheckMacValue = $this->generateCheckMacValue($arParameters,$this->HashKey,$this->HashIV,0);
-            $arParameters["CheckMacValue"] = $szCheckMacValue;
-            
-            // 送出查詢並取回結果。
-            $szResult = $this->ServerPost($arParameters);
-            $szResult = str_replace(' ', '%20', $szResult);
-            $szResult = str_replace('+', '%2B', $szResult);
-            
-            // 轉結果為陣列。
-            parse_str($szResult, $arParameters);
-            // 重新整理回傳參數。
-            foreach ($arParameters as $keys => $value) {
-                if ($keys == 'CheckMacValue') {
-                    $szCheckMacValue = $value;
-                } else {
-                    $arFeedback[$keys] = $value;
-                    $arConfirmArgs[$keys] = $value;
-                }
-            }
-
-            // 驗證檢查碼。
-            if (sizeof($arFeedback) > 0) {
-                $szConfirmMacValue = $this->generateCheckMacValue($arConfirmArgs,$this->HashKey,$this->HashIV,0);
-                if ($szCheckMacValue != $szConfirmMacValue) {
-                    array_push($arErrors, 'CheckMacValue verify fail.');
-                }
-            }
-        }
-
-        if (sizeof($arErrors) > 0) {
-            throw new Exception(join('- ', $arErrors));
-        }
-
-        return $arFeedback;
+        return $arFeedback = QueryTradeInfo::CheckOut(array_merge($this->Query,array("MerchantID" => $this->MerchantID)) ,$this->HashKey ,$this->HashIV ,$this->ServiceURL) ;
     }
     
     //信用卡定期定額訂單查詢的方法
     function QueryPeriodCreditCardTradeInfo() {
-        $arErrors = array();
-        $this->Query['TimeStamp'] = time();
-        $arFeedback = array();
-        $arConfirmArgs = array();
-        // 檢查資料。
-        if (strlen($this->ServiceURL) == 0) {
-            array_push($arErrors, 'ServiceURL is required.');
-        }
-        if (strlen($this->ServiceURL) > 200) {
-            array_push($arErrors, 'ServiceURL max langth as 200.');
-        }
-        if (strlen($this->HashKey) == 0) {
-            array_push($arErrors, 'HashKey is required.');
-        }
-        if (strlen($this->HashIV) == 0) {
-            array_push($arErrors, 'HashIV is required.');
-        }
-        if (strlen($this->MerchantID) == 0) {
-            array_push($arErrors, 'MerchantID is required.');
-        }
-        if (strlen($this->MerchantID) > 10) {
-            array_push($arErrors, 'MerchantID max langth as 10.');
-        }
-
-        if (strlen($this->Query['MerchantTradeNo']) == 0) {
-            array_push($arErrors, 'MerchantTradeNo is required.');
-        }
-        if (strlen($this->Query['MerchantTradeNo']) > 20) {
-            array_push($arErrors, 'MerchantTradeNo max langth as 20.');
-        }
-        if (strlen($this->Query['TimeStamp']) == 0) {
-            array_push($arErrors, 'TimeStamp is required.');
-        }
-        // 呼叫查詢。
-        if (sizeof($arErrors) == 0) {
-            $arParameters = array("MerchantID" => $this->MerchantID);
-            $arParameters = array_merge($arParameters, $this->Query);
-
-            $szCheckMacValue = $this->generateCheckMacValue($arParameters,$this->HashKey,$this->HashIV,0);
-            $arParameters["CheckMacValue"] = $szCheckMacValue;
-            
-            // 送出查詢並取回結果。
-            $szResult = $this->ServerPost($arParameters);
-            $szResult = str_replace(' ', '%20', $szResult);
-            $szResult = str_replace('+', '%2B', $szResult);
-            
-            // 轉結果為陣列。
-            parse_str($szResult, $arParameters);
-
-        }
-
-        if (sizeof($arErrors) > 0) {
-            throw new Exception(join('- ', $arErrors));
-        }
-
-        return $arFeedback;
-
+        return $arFeedback = QueryPeriodCreditCardTradeInfo::CheckOut(array_merge($this->Query,array("MerchantID" => $this->MerchantID)) ,$this->HashKey ,$this->HashIV ,$this->ServiceURL);
     }
 
     //信用卡關帳/退刷/取消/放棄的方法
     function DoAction() {
-        // 變數宣告。
-        $arErrors = array();
-        $arFeedback = array();
-        // 檢查資料。
-        if (strlen($this->ServiceURL) == 0) {
-            array_push($arErrors, 'ServiceURL is required.');
-        }
-        if (strlen($this->ServiceURL) > 200) {
-            array_push($arErrors, 'ServiceURL max langth as 200.');
-        }
-        if (strlen($this->HashKey) == 0) {
-            array_push($arErrors, 'HashKey is required.');
-        }
-        if (strlen($this->HashIV) == 0) {
-            array_push($arErrors, 'HashIV is required.');
-        }
-        if (strlen($this->MerchantID) == 0) {
-            array_push($arErrors, 'MerchantID is required.');
-        }
-        if (strlen($this->MerchantID) > 10) {
-            array_push($arErrors, 'MerchantID max langth as 10.');
-        }
-
-        if (strlen($this->Action['MerchantTradeNo']) == 0) {
-            array_push($arErrors, 'MerchantTradeNo is required.');
-        }
-        if (strlen($this->Action['MerchantTradeNo']) > 20) {
-            array_push($arErrors, 'MerchantTradeNo max langth as 20.');
-        }
-        if (strlen($this->Action['TradeNo']) == 0) {
-            array_push($arErrors, 'TradeNo is required.');
-        }
-        if (strlen($this->Action['TradeNo']) > 20) {
-            array_push($arErrors, 'TradeNo max langth as 20.');
-        }
-        if (strlen($this->Action['Action']) == 0) {
-            array_push($arErrors, 'Action is required.');
-        }
-        if (strlen($this->Action['Action']) > 1) {
-            array_push($arErrors, 'Action max length as 1.');
-        }
-        if (strlen($this->Action['TotalAmount']) == 0) {
-            array_push($arErrors, 'TotalAmount is required.');
-        }
-        // 呼叫信用卡訂單處理。
-        if (sizeof($arErrors) == 0) {
-            $arParameters = array("MerchantID" => $this->MerchantID);
-            $arParameters = array_merge($arParameters, $this->Action);
-            
-            //產生驗證碼
-            $szCheckMacValue = $this->generateCheckMacValue($arParameters,$this->HashKey,$this->HashIV,0);
-            $arParameters["CheckMacValue"] = $szCheckMacValue;
-            // 送出查詢並取回結果。
-            $szResult = $this->ServerPost($arParameters);
-            // 轉結果為陣列。
-            parse_str($szResult, $arParameters);
-            // 重新整理回傳參數。
-            foreach ($arParameters as $keys => $value) {
-                if ($keys == 'CheckMacValue') {
-                    $szCheckMacValue = $value;
-                } else {
-                    $arFeedback[$keys] = $value;
-                }
-            }
-
-            if (array_key_exists('RtnCode', $arFeedback) && $arFeedback['RtnCode'] != '1') {
-                array_push($arErrors, vsprintf('#%s: %s', array($arFeedback['RtnCode'], $arFeedback['RtnMsg'])));
-            }
-        }
-
-        if (sizeof($arErrors) > 0) {
-            throw new Exception(join('- ', $arErrors));
-        }
-
-        return $arFeedback;
-
-       
+        return $arFeedback = DoAction::CheckOut(array_merge($this->Action,array("MerchantID" => $this->MerchantID)) ,$this->HashKey ,$this->HashIV ,$this->ServiceURL);
     }
     
     //廠商通知退款
     function AioChargeback() {
-        // 變數宣告。
-        $arErrors = array();
-        $arParameters = array("MerchantID" => $this->MerchantID);
-        $arParameters = array_merge($arParameters, $this->ChargeBack);
-        $arFeedback = array();
-        // 檢查資料。
-        if (strlen($this->ServiceURL) == 0) {
-            array_push($arErrors, 'ServiceURL is required.');
-        }
-        if (strlen($this->ServiceURL) > 200) {
-            array_push($arErrors, 'ServiceURL max langth as 200.');
-        }
-        if (strlen($this->HashKey) == 0) {
-            array_push($arErrors, 'HashKey is required.');
-        }
-        if (strlen($this->HashIV) == 0) {
-            array_push($arErrors, 'HashIV is required.');
-        }
-        if (strlen($this->MerchantID) == 0) {
-            array_push($arErrors, 'MerchantID is required.');
-        }
-        if (strlen($this->MerchantID) > 10) {
-            array_push($arErrors, 'MerchantID max langth as 10.');
-        }
-
-        if (strlen($this->ChargeBack['MerchantTradeNo']) == 0) {
-            array_push($arErrors, 'MerchantTradeNo is required.');
-        }
-        if (strlen($this->ChargeBack['MerchantTradeNo']) > 20) {
-            array_push($arErrors, 'MerchantTradeNo max langth as 20.');
-        }
-        if (strlen($this->ChargeBack['TradeNo']) == 0) {
-            array_push($arErrors, 'TradeNo is required.');
-        }
-        if (strlen($this->ChargeBack['TradeNo']) > 20) {
-            array_push($arErrors, 'TradeNo max langth as 20.');
-        }
-        if (strlen($this->ChargeBack['ChargeBackTotalAmount']) == 0) {
-            array_push($arErrors, 'ChargeBackTotalAmount is required.');
-        }
-        if (strlen($this->ChargeBack['Remark']) > 200) {
-            array_push($arErrors, 'Remark max length as 200.');
-        }
-        
-        $szCheckMacValue = $this->generateCheckMacValue($arParameters,$this->HashKey,$this->HashIV,0);
-        $arParameters["CheckMacValue"] = $szCheckMacValue;
-        // 送出查詢並取回結果。
-        $szResult = $this->ServerPost($arParameters);
-        // 檢查結果資料。
-        if ($szResult == '1|OK') {
-            $arFeedback['RtnCode'] = '1';
-            $arFeedback['RtnMsg'] = 'OK';
-        } else {
-            array_push($arErrors, str_replace('-', ': ', $szResult));
-        }
-
-        if (sizeof($arErrors) > 0) {
-            throw new Exception(join('- ', $arErrors));
-        }
-
-        return $arFeedback;
+        return $arFeedback = AioChargeback::CheckOut(array_merge($this->ChargeBack,array("MerchantID" => $this->MerchantID)) ,$this->HashKey ,$this->HashIV ,$this->ServiceURL);
+    }
+    
+    function AioCapture(){
+        return $arFeedback = AioCapture::Capture(array_merge($this->Capture,array("MerchantID" => $this->MerchantID)) ,$this->HashKey ,$this->HashIV ,$this->ServiceURL);
     }
 
-    private function ServerPost($parameters) {
+
+    
+
+}
+
+/**
+* 抽象類
+*/
+abstract class Aio
+{
+    abstract static function CheckOut();
+
+    protected function ServerPost($parameters ,$ServiceURL) {
         $ch = curl_init();
 
-        curl_setopt($ch, CURLOPT_URL, $this->ServiceURL);
+        curl_setopt($ch, CURLOPT_URL, $ServiceURL);
         curl_setopt($ch, CURLOPT_HEADER, FALSE);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, TRUE);
@@ -854,77 +570,50 @@ class AllInOne extends Aio{
 
         return $rs;
     }
-    
 
 }
-
-
-
-
-
-
-
-
 
 /**
 *  產生訂單
 */
 class Send extends Aio
-{
-    //從AllInOne收到的基本參數
-    public $arParameters ;
-    
-    //從AllInOne收到的延伸參數
-    public $arExtend ;
-    
-    //呼叫API位置
-    public $ServiceURL ;
-
-    //HashKey
-    public $HashKey ;
-    
-    //HashIV
-    public $HashIV;
-    
+{   
     //付款方式物件
-    public $PaymentObj ;
+    public static $PaymentObj ;
 
-    function __construct($arParameters = array(),$arExtend = array(),$ServiceURL = '',$HashKey = '',$HashIV = '')
+    function process($arParameters = array(),$arExtend = array())
     {
-        //宣告參數
-        $this->ServiceURL   = $ServiceURL;
-        $this->HashKey      = $HashKey;
-        $this->HashIV       = $HashIV ;
-
         //宣告付款方式物件
-        $PaymentMethod = 'allPay_'.$arParameters['ChoosePayment'];
-        $this->PaymentObj   = new $PaymentMethod;
+        $PaymentMethod    = 'allPay_'.$arParameters['ChoosePayment'];
+        self::$PaymentObj = new $PaymentMethod;
         
         //檢查參數
-        $arParameters = $this->PaymentObj->check_string($arParameters,$this->ServiceURL,$this->HashKey,$this->HashIV);
+        $arParameters = self::$PaymentObj->check_string($arParameters);
         
         //檢查商品
-        $arParameters = $this->PaymentObj->check_goods($arParameters);
-        
+        $arParameters = self::$PaymentObj->check_goods($arParameters);
+
         //檢查各付款方式的額外參數&電子發票參數
-        $arExtend = $this->PaymentObj->check_extend_string($arExtend,$arParameters['InvoiceMark']);
+        $arExtend = self::$PaymentObj->check_extend_string($arExtend,$arParameters['InvoiceMark']);
         
         //過濾
-        $this->arExtend = $this->PaymentObj->filter_string($arExtend,$arParameters['InvoiceMark']);
+        $arExtend = self::$PaymentObj->filter_string($arExtend,$arParameters['InvoiceMark']);
 
         //合併共同參數及延伸參數
-        $this->arParameters = array_merge($arParameters,$this->arExtend) ;
+        return array_merge($arParameters,$arExtend) ;
     }
+    
 
-    function CheckOut($target = "_self"){
+    static function CheckOut($target = "_self",$arParameters = array(),$arExtend = array(),$HashKey='',$HashIV='',$ServiceURL=''){
             
+        $arParameters = self::process($arParameters,$arExtend);
         //產生檢查碼
-        $szCheckMacValue = $this->generateCheckMacValue($this->arParameters,$this->HashKey,$this->HashIV,$this->arParameters['EncryptType']);
+        $szCheckMacValue = CheckMacValue::generate($arParameters,$HashKey,$HashIV,$arParameters['EncryptType']);
        
         //生成表單，自動送出
         $szHtml = '<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />';
-        $szHtml .= '<div style="text-align:center;" ><form id="__allpayForm" method="post" target="' . $target . '" action="' . $this->ServiceURL . '">';
-        foreach ($this->arParameters as $keys => $value) {
+        $szHtml .= '<div style="text-align:center;" ><form id="__allpayForm" method="post" target="' . $target . '" action="' . $ServiceURL . '">';
+        foreach ($arParameters as $keys => $value) {
             $szHtml .="<input type='hidden' name='$keys' value='$value' />";
         }
         $szHtml .= '<input type="hidden" name="CheckMacValue" value="' . $szCheckMacValue . '" />';
@@ -935,9 +624,12 @@ class Send extends Aio
         exit;
     }
 
-    function CheckOutString($paymentButton,$target = "_self"){
+    static function CheckOutString($paymentButton,$target = "_self",$arParameters = array(),$arExtend = array(),$HashKey='',$HashIV='',$ServiceURL=''){
+        
+        $arParameters = self::process($arParameters,$arExtend);
         //產生檢查碼
         $szCheckMacValue = $this->generateCheckMacValue($this->arParameters,$this->HashKey,$this->HashIV,$this->arParameters['EncryptType']);
+        
         $szHtml = '';
         $szHtml = '<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />';
         $szHtml .= '<div style="text-align:center;" ><form id="__allpayForm" method="post" target="' . $target . '" action="' . $this->ServiceURL . '">';
@@ -956,681 +648,234 @@ class Send extends Aio
         return  $szHtml ;
     }
 
-
-    
-
 }
 
 
-
-/**
-*  付款方式：超商代碼
-*/
-class allPay_CVS extends Verification
+class CheckOutFeedback extends Aio 
 {
-    public  $arPayMentExtend = array(
-                            'Desc_1'           =>'',
-                            'Desc_2'           =>'',
-                            'Desc_3'           =>'',
-                            'Desc_4'           =>'',
-                            'PaymentInfoURL'   =>'',
-                            'ClientRedirectURL'=>'',
-                            'StoreExpireDate'  =>''
-                        );
-    //檢查共同參數
-    function check_string($arParameters = array() ,$ServiceURL = '' ,$HashKey = '' ,$HashIV = ''){
-        parent::check_string($arParameters,$ServiceURL,$HashKey,$HashIV);
-        if (!$arParameters['PlatformID'])  unset($arParameters['PlatformID']); 
-        unset($arParameters['IgnorePayment']);
-        return $arParameters ;
-    }
-    //檢查CVS的延伸參數
-    function check_extend_string($arExtend = array(),$InvoiceMark = ''){
-
-        //沒設定參數的話，就給預設參數
-        foreach ($this->arPayMentExtend as $key => $value) {
-            if(!isset($arExtend[$key])) $arExtend[$key] = $value;
-        }
-
-        //若有開發票，檢查一下發票參數
-        if($InvoiceMark == 'Y') $arExtend = $this->check_invoiceString($arExtend);
-        return $arExtend ;
-
-    }
-    
-    //過濾多餘參數
-    function filter_string($arExtend = array(),$InvoiceMark = '')
-    {
-        $arPayMentExtend = ($InvoiceMark == '')? array_keys($this->arPayMentExtend) : array_merge(array_keys($this->arPayMentExtend),$this->arInvoice);
-        foreach ($arExtend as $key => $value) {
-            if (!in_array($key,$arPayMentExtend )) {
-                unset($arExtend[$key]);
-            }
-        }
-        return $arExtend ;
-    }
-
-    //檢查商品
-    function check_goods($arParameters = array()){
-        // 檢查產品名稱。
-        $szItemName = '';
-        $arErrors   = array();
-        if (sizeof($arParameters['Items']) > 0) {
-            foreach ($arParameters['Items'] as $keys => $value) {
-                $szItemName .= vsprintf('#%s %d %s x %u', $arParameters['Items'][$keys]);
-                if (!array_key_exists('ItemURL', $arParameters)) {
-                    $arParameters['ItemURL'] = $arParameters['Items'][$keys]['URL'];
-                }
-            }
-
-            if (strlen($szItemName) > 0) {
-                $szItemName = mb_substr($szItemName, 1, 200);
-                $arParameters['ItemName'] = $szItemName ;
-            }
-        } else {
-            array_push($arErrors, "Goods information not found.");
-        }
-
-        if(sizeof($arErrors)>0) throw new Exception(join('<br>', $arErrors));
-
-        unset($arParameters['Items']);
-        return $arParameters ;
-    }
-
-}
-
-/**
-* 付款方式 : BARCODE 
-*/
-class allPay_BARCODE extends Verification
-{
-    public  $arPayMentExtend = array(
-                            'Desc_1'           =>'',
-                            'Desc_2'           =>'',
-                            'Desc_3'           =>'',
-                            'Desc_4'           =>'',
-                            'PaymentInfoURL'   =>'',
-                            'ClientRedirectURL'=>'',
-                            'StoreExpireDate'  =>''
-                        );
-
-    //檢查共同參數
-    function check_string($arParameters = array() ,$ServiceURL = '' ,$HashKey = '' ,$HashIV = ''){
-        parent::check_string($arParameters,$ServiceURL,$HashKey,$HashIV);
-        if (!$arParameters['PlatformID'])  unset($arParameters['PlatformID']); 
-        unset($arParameters['IgnorePayment']);
-        return $arParameters ;
-    }
-    
-    //檢查BARCODE的延伸參數
-    function check_extend_string($arExtend = array(),$InvoiceMark = ''){
-
-        //沒設定參數的話，就給預設參數
-        foreach ($this->arPayMentExtend as $key => $value) {
-            if(!isset($arExtend[$key])) $arExtend[$key] = $value;
-        }
-
-        //若有開發票，檢查一下發票參數
-        if($InvoiceMark == 'Y') $arExtend = $this->check_invoiceString($arExtend);
-        return $arExtend ;
-
-    }
-    
-    //過濾多餘參數
-    function filter_string($arExtend = array(),$InvoiceMark = '')
-    {
-        $arPayMentExtend = ($InvoiceMark == '')? array_keys($this->arPayMentExtend) : array_merge(array_keys($this->arPayMentExtend),$this->arInvoice);
-        foreach ($arExtend as $key => $value) {
-            if (!in_array($key,$arPayMentExtend )) {
-                unset($arExtend[$key]);
-            }
-        }
-        return $arExtend ;
-    }
-        //檢查商品
-    function check_goods($arParameters = array()){
-        // 檢查產品名稱。
-        $szItemName = '';
-        $arErrors   = array();
-        if (sizeof($arParameters['Items']) > 0) {
-            foreach ($arParameters['Items'] as $keys => $value) {
-                $szItemName .= vsprintf('#%s %d %s x %u', $arParameters['Items'][$keys]);
-                if (!array_key_exists('ItemURL', $arParameters)) {
-                    $arParameters['ItemURL'] = $arParameters['Items'][$keys]['URL'];
-                }
-            }
-
-            if (strlen($szItemName) > 0) {
-                $szItemName = mb_substr($szItemName, 1, 200);
-                $arParameters['ItemName'] = $szItemName ;
-            }
-        } else {
-            array_push($arErrors, "Goods information not found.");
-        }
-
-        if(sizeof($arErrors)>0) throw new Exception(join('<br>', $arErrors));
-
-        unset($arParameters['Items']);
-        return $arParameters ;
-    }
-
-}
-
-/**
-*  付款方式 ATM
-*/
-
-class allPay_ATM extends Verification
-{
-    public  $arPayMentExtend = array(
-                            'ExpireDate'       => 3,
-                            'PaymentInfoURL'   => '',
-                            'ClientRedirectURL'=> '',
-                        );
-
-    //檢查共同參數
-    function check_string($arParameters = array() ,$ServiceURL = '' ,$HashKey = '' ,$HashIV = ''){
-        parent::check_string($arParameters,$ServiceURL,$HashKey,$HashIV);
-        if (!$arParameters['PlatformID'])  unset($arParameters['PlatformID']); 
-        unset($arParameters['IgnorePayment']);
-        return $arParameters ;
-    }
-
-    //檢查ATM的延伸參數
-    function check_extend_string($arExtend = array(),$InvoiceMark = ''){
-        //沒設定參數的話，就給預設參數
-        foreach ($this->arPayMentExtend as $key => $value) {
-            if(!isset($arExtend[$key])) $arExtend[$key] = $value;
-        }
-        
-        //若有開發票，檢查一下發票參數
-        if($InvoiceMark == 'Y') $arExtend = $this->check_invoiceString($arExtend);
-        return $arExtend ;
-
-    }
-    
-    //過濾多餘參數
-    function filter_string($arExtend = array(),$InvoiceMark = '')
-    {
-        $arPayMentExtend = ($InvoiceMark == '')? array_keys($this->arPayMentExtend) : array_merge(array_keys($this->arPayMentExtend),$this->arInvoice);
-        foreach ($arExtend as $key => $value) {
-            if (!in_array($key,$arPayMentExtend )) {
-                unset($arExtend[$key]);
-            }
-        }
-        return $arExtend ;
-    }
-
-    //檢查商品
-    function check_goods($arParameters = array()){
-        // 檢查產品名稱。
-        $szItemName = '';
-        $arErrors   = array();
-        if (sizeof($arParameters['Items']) > 0) {
-            foreach ($arParameters['Items'] as $keys => $value) {
-                $szItemName .= vsprintf('#%s %d %s x %u', $arParameters['Items'][$keys]);
-                if (!array_key_exists('ItemURL', $arParameters)) {
-                    $arParameters['ItemURL'] = $arParameters['Items'][$keys]['URL'];
-                }
-            }
-
-            if (strlen($szItemName) > 0) {
-                $szItemName = mb_substr($szItemName, 1, 200);
-                $arParameters['ItemName'] = $szItemName ;
-            }
-        } else {
-            array_push($arErrors, "Goods information not found.");
-        }
-
-        if(sizeof($arErrors)>0) throw new Exception(join('<br>', $arErrors));
-
-        unset($arParameters['Items']);
-        return $arParameters ;
-    }
-
-
-}
-
-/**
-*  付款方式 WebATM
-*/
-
-class allPay_WebATM extends Verification
-{
-    public  $arPayMentExtend = array();
-   
-    //檢查共同參數
-    function check_string($arParameters = array() ,$ServiceURL = '' ,$HashKey = '' ,$HashIV = ''){
-        parent::check_string($arParameters,$ServiceURL,$HashKey,$HashIV);
-        if (!$arParameters['PlatformID'])  unset($arParameters['PlatformID']); 
-        unset($arParameters['IgnorePayment']);
-        return $arParameters ;
-    }
-
-    //檢查WebATM的延伸參數
-    function check_extend_string($arExtend = array(),$InvoiceMark = ''){
-        //沒設定參數的話，就給預設參數
-        foreach ($this->arPayMentExtend as $key => $value) {
-            if(!isset($arExtend[$key])) $arExtend[$key] = $value;
-        }
-        
-        //若有開發票，檢查一下發票參數
-        if($InvoiceMark == 'Y') $arExtend = $this->check_invoiceString($arExtend);
-        return $arExtend ;
-
-    }
-    
-    //過濾多餘參數
-    function filter_string($arExtend = array(),$InvoiceMark = '')
-    {
-        $arPayMentExtend = ($InvoiceMark == '')? array_keys($this->arPayMentExtend) : array_merge(array_keys($this->arPayMentExtend),$this->arInvoice);
-        foreach ($arExtend as $key => $value) {
-            if (!in_array($key,$arPayMentExtend )) {
-                unset($arExtend[$key]);
-            }
-        }
-        return $arExtend ;
-    }
-    //檢查商品
-    function check_goods($arParameters = array()){
-        // 檢查產品名稱。
-        $arErrors   = array();
-        $szItemName = '';
-        if (sizeof($arParameters['Items']) > 0) {
-            foreach ($arParameters['Items'] as $keys => $value) {
-                $szItemName .= vsprintf('#%s %d %s x %u', $arParameters['Items'][$keys]);
-                if (!array_key_exists('ItemURL', $arParameters)) {
-                    $arParameters['ItemURL'] = $arParameters['Items'][$keys]['URL'];
-                }
-            }
-
-            if (strlen($szItemName) > 0) {
-                $szItemName = mb_substr($szItemName, 1, 200);
-                $arParameters['ItemName'] = $szItemName ;
-            }
-        } else {
-            array_push($arErrors, "Goods information not found.");
-        }
-
-        if(sizeof($arErrors)>0) throw new Exception(join('<br>', $arErrors));
-
-        unset($arParameters['Items']);
-        return $arParameters ;
-    }
-
-
-}
-
-
-/**
-* 付款方式 : Alipay
-*/
-class allPay_Alipay extends Verification
-{
-    public  $arPayMentExtend = array(
-                            'Email'           => '',
-                            'PhoneNo'         => '',
-                            'UserName'        => '',
-                            'AlipayItemName'  => '',
-                            'AlipayItemCounts'=> '',
-                            'AlipayItemPrice' => ''
-                        );
-    //檢查共同參數
-    function check_string($arParameters = array() ,$ServiceURL = '' ,$HashKey = '' ,$HashIV = ''){
-        parent::check_string($arParameters,$ServiceURL,$HashKey,$HashIV);
-        if (!$arParameters['PlatformID'])  unset($arParameters['PlatformID']); 
-        unset($arParameters['IgnorePayment']);
-        return $arParameters ;
-    }
-
-    //檢查Alipay的延伸參數
-    function check_extend_string($arExtend = array(),$InvoiceMark = ''){
+    static function CheckOut($arParameters = array(),$HashKey = '' ,$HashIV = ''){
+        // 變數宣告。
         $arErrors = array();
-        foreach ($this->arPayMentExtend as $value) {
-            if(!array_key_exists($value, $arExtend)) array_push($arErrors, $value." is required");
+        $arFeedback = array();
+        $szCheckMacValue = '';
+        // 重新整理回傳參數。
+        foreach ($arParameters as $keys => $value) {
+            if ($keys != 'CheckMacValue') {
+                if ($keys == 'PaymentType') {
+                    $value = str_replace('_CVS', '', $value);
+                    $value = str_replace('_BARCODE', '', $value);
+                    $value = str_replace('_Alipay', '', $value);
+                    $value = str_replace('_Tenpay', '', $value);
+                    $value = str_replace('_CreditCard', '', $value);
+                }
+                if ($keys == 'PeriodType') {
+                    $value = str_replace('Y', 'Year', $value);
+                    $value = str_replace('M', 'Month', $value);
+                    $value = str_replace('D', 'Day', $value);
+                }
+                $arFeedback[$keys] = $value;
+            }
         }
 
-        if(empty($arExtend['AlipayItemName']) || empty($arExtend['AlipayItemCounts'])  || empty($arExtend['AlipayItemPrice']) ){
-            array_push($arErrors, 'AlipayItemName , AlipayItemCounts ,AlipayItemPrice is required');
+        $CheckMacValue = CheckMacValue::generate($arParameters,$HashKey,$HashIV,0);
+
+        if ($CheckMacValue != $arParameters['CheckMacValue']) {
+            array_push($arErrors, 'CheckMacValue verify fail.');
         }
 
-        if(sizeof($arErrors)>0) throw new Exception(join('<br>', $arErrors));
+        if (sizeof($arErrors) > 0) {
+            throw new Exception(join('- ', $arErrors));
+        }
+        
+        return $arFeedback;
+    }
+}
+
+
+class QueryTradeInfo extends Aio
+{
+    static function CheckOut($arParameters = array(),$HashKey ='',$HashIV ='',$ServiceURL = ''){
+        $arErrors = array();
+        $arParameters['TimeStamp'] = time();
+        $arFeedback = array();
+        $arConfirmArgs = array();
+        // 呼叫查詢。
+        if (sizeof($arErrors) == 0) {
+            $arParameters["CheckMacValue"] = CheckMacValue::generate($arParameters,$HashKey,$HashIV,0);
+            // 送出查詢並取回結果。
+            $szResult = parent::ServerPost($arParameters,$ServiceURL);
+            $szResult = str_replace(' ', '%20', $szResult);
+            $szResult = str_replace('+', '%2B', $szResult);
+            
+            // 轉結果為陣列。
+            parse_str($szResult, $arParameters);
+            // 重新整理回傳參數。
+            foreach ($arParameters as $keys => $value) {
+                if ($keys == 'CheckMacValue') {
+                    $szCheckMacValue = $value;
+                } else {
+                    $arFeedback[$keys] = $value;
+                    $arConfirmArgs[$keys] = $value;
+                }
+            }
+
+            // 驗證檢查碼。
+            if (sizeof($arFeedback) > 0) {
+                $szConfirmMacValue = CheckMacValue::generate($arConfirmArgs,$HashKey,$HashIV,0);
+                if ($szCheckMacValue != $szConfirmMacValue) {
+                    array_push($arErrors, 'CheckMacValue verify fail.');
+                }
+            }
+        }
+
+        if (sizeof($arErrors) > 0) {
+            throw new Exception(join('- ', $arErrors));
+        }
+
+        return $arFeedback ;
+
+    }    
+}
+
+
+class QueryPeriodCreditCardTradeInfo extends Aio
+{
+    static function CheckOut($arParameters = array(),$HashKey ='',$HashIV ='',$ServiceURL = ''){
+        $arErrors = array();
+        $arParameters['TimeStamp'] = time();
+        $arFeedback = array();
+        $arConfirmArgs = array();
+        // 呼叫查詢。
+        if (sizeof($arErrors) == 0) {
+            $arParameters["CheckMacValue"] = CheckMacValue::generate($arParameters,$HashKey,$HashIV,0);
+            // 送出查詢並取回結果。
+            $szResult = parent::ServerPost($arParameters,$ServiceURL);
+            $szResult = str_replace(' ', '%20', $szResult);
+            $szResult = str_replace('+', '%2B', $szResult);
+            
+            // 轉結果為陣列。
+            $arParameters = json_decode($szResult,true);
+            // 重新整理回傳參數。
+            foreach ($arParameters as $keys => $value) {
+                $arFeedback[$keys] = $value;
+            }
+
+        }
+
+        if (sizeof($arErrors) > 0) {
+            throw new Exception(join('- ', $arErrors));
+        }
+
+        return $arFeedback ;
+    }
+}
+
+
+class DoAction extends Aio
+{
+    static function CheckOut($arParameters = array(),$HashKey ='',$HashIV ='',$ServiceURL = ''){
+                // 變數宣告。
+        $arErrors = array();
+        $arFeedback = array();
                 
-        //若有開發票，檢查一下發票參數
-        if($InvoiceMark == 'Y') $arExtend = $this->check_invoiceString($arExtend);
-        return $arExtend ;
-
-    }
-    
-    //過濾多餘參數
-    function filter_string($arExtend = array(),$InvoiceMark = '')
-    {
-        $arPayMentExtend = ($InvoiceMark == '')? $this->arPayMentExtend : array_merge($this->arPayMentExtend,$this->arInvoice);
-        foreach ($arExtend as $key => $value) {
-            if (!in_array($key,$arPayMentExtend )) {
-                unset($arExtend[$key]);
+        //產生驗證碼
+        $szCheckMacValue = CheckMacValue::generate($arParameters,$HashKey,$HashIV,0);
+        $arParameters["CheckMacValue"] = $szCheckMacValue;
+        // 送出查詢並取回結果。
+        $szResult = self::ServerPost($arParameters,$ServiceURL);
+        // 轉結果為陣列。
+        parse_str($szResult, $arParameters);
+        // 重新整理回傳參數。
+        foreach ($arParameters as $keys => $value) {
+            if ($keys == 'CheckMacValue') {
+                $szCheckMacValue = $value;
+            } else {
+                $arFeedback[$keys] = $value;
             }
         }
-        return $arExtend ;
-    }
-    //檢查商品
-    function check_goods($arParameters = array()){
-        // 檢查產品名稱。
-        $arErrors           = array();
-        $szAlipayItemName   = '';
-        $szAlipayItemCounts = '';
-        $szAlipayItemPrice  = '';        
-        if (sizeof($arParameters['Items']) > 0) {
-            foreach ($arParameters['Items'] as $keys => $value) {
-                $szItemName .= vsprintf('#%s %d %s x %u', $arParameters['Items'][$keys]);
-                //for 支付寶
-                $szAlipayItemName .= sprintf('#%s', $arParameters['Items'][$keys]['Name']);
-                $szAlipayItemCounts .= sprintf('#%u', $arParameters['Items'][$keys]['Quantity']);
-                $szAlipayItemPrice .= sprintf('#%d', $arParameters['Items'][$keys]['Price']);
 
-                if (!array_key_exists('ItemURL', $arParameters)) {
-                    $arParameters['ItemURL'] = $arParameters['Items'][$keys]['URL'];
-                }
-            }
-
-            if (strlen($szItemName) > 0) {
-                $szItemName = mb_substr($szItemName, 1, 200);
-                $arParameters['ItemName'] = $szItemName ;
-            }
-            if (strlen($szAlipayItemName) > 0) {
-                $szAlipayItemName = mb_substr($szAlipayItemName, 1, 200);
-            }
-            if (strlen($szAlipayItemCounts) > 0) {
-                $szAlipayItemCounts = mb_substr($szAlipayItemCounts, 1, 100);
-            }
-            if (strlen($szAlipayItemPrice) > 0) {
-                $szAlipayItemPrice = mb_substr($szAlipayItemPrice, 1, 20);
-            }
-
-            $arParameters['AlipayItemName']   = $szAlipayItemName;
-            $arParameters['AlipayItemCounts'] = $szAlipayItemCounts;
-            $arParameters['AlipayItemPrice']  = $szAlipayItemPrice;
-
-        } else {
-            array_push($arErrors, "Goods information not found.");
-        }
-
-        if(sizeof($arErrors)>0) throw new Exception(join('<br>', $arErrors));
-        unset($arParameters['Items']);
-        return $arParameters ;
-
-    }
-
-}
-/**
-* 付款方式：Tenpay
-*/
-class allPay_Tenpay extends Verification
-{
-    public  $arPayMentExtend = array('ExpireTime' => '');
-    
-    //檢查共同參數
-    function check_string($arParameters = array() ,$ServiceURL = '' ,$HashKey = '' ,$HashIV = ''){
-        parent::check_string($arParameters,$ServiceURL,$HashKey,$HashIV);
-        if (!$arParameters['PlatformID'])  unset($arParameters['PlatformID']); 
-        unset($arParameters['IgnorePayment']);
-        return $arParameters ;
-    }
-     
-    //檢查Tenpay的延伸參數
-    function check_extend_string($arExtend = array(),$InvoiceMark = ''){
-        //沒設定參數的話，就給預設參數
-        foreach ($this->arPayMentExtend as $key => $value) {
-            if(!isset($arExtend[$key])) $arExtend[$key] = $value;
+        if (array_key_exists('RtnCode', $arFeedback) && $arFeedback['RtnCode'] != '1') {
+            array_push($arErrors, vsprintf('#%s: %s', array($arFeedback['RtnCode'], $arFeedback['RtnMsg'])));
         }
         
-        //若有開發票，檢查一下發票參數
-        if($InvoiceMark == 'Y') $arExtend = $this->check_invoiceString($arExtend);
-        return $arExtend ;
-
-    }
-    
-    //過濾多餘參數
-    function filter_string($arExtend = array(),$InvoiceMark = '')
-    {
-        $arPayMentExtend = ($InvoiceMark == '')? array_keys($this->arPayMentExtend) : array_merge(array_keys($this->arPayMentExtend),$this->arInvoice);
-        foreach ($arExtend as $key => $value) {
-            if (!in_array($key,$arPayMentExtend )) {
-                unset($arExtend[$key]);
-            }
-        }
-        return $arExtend ;
-    }
-    //檢查商品
-    function check_goods($arParameters = array()){
-        // 檢查產品名稱。
-        $szItemName = '';
-        $arErrors   = array();
-        if (sizeof($arParameters['Items']) > 0) {
-            foreach ($arParameters['Items'] as $keys => $value) {
-                $szItemName .= vsprintf('#%s %d %s x %u', $arParameters['Items'][$keys]);
-                if (!array_key_exists('ItemURL', $arParameters)) {
-                    $arParameters['ItemURL'] = $arParameters['Items'][$keys]['URL'];
-                }
-            }
-
-            if (strlen($szItemName) > 0) {
-                $szItemName = mb_substr($szItemName, 1, 200);
-                $arParameters['ItemName'] = $szItemName ;
-            }
-        } else {
-            array_push($arErrors, "Goods information not found.");
+        if (sizeof($arErrors) > 0) {
+            throw new Exception(join('- ', $arErrors));
         }
 
-        if(sizeof($arErrors)>0) throw new Exception(join('<br>', $arErrors));
+        return $arFeedback ;
 
-        unset($arParameters['Items']);
-        return $arParameters ;
     }
-
 }
 
-/**
-* 付款方式 : 信用卡
-*/
-class allPay_Credit extends Verification
-{
-    public $arPayMentExtend = array(
-                                    "CreditInstallment" => 0,
-                                    "InstallmentAmount" => 0, 
-                                    "Redeem"            => FALSE, 
-                                    "UnionPay"          => FALSE,
-                                    "Language"          => '',
-                                    "PeriodAmount"      => '',
-                                    "PeriodType"        => '',  
-                                    "Frequency"         => '',  
-                                    "ExecTimes"         => ''
-                                );
-    //檢查共同參數
-    function check_string($arParameters = array() ,$ServiceURL = '' ,$HashKey = '' ,$HashIV = ''){
-        parent::check_string($arParameters,$ServiceURL,$HashKey,$HashIV);
-        if (!$arParameters['PlatformID'])  unset($arParameters['PlatformID']); 
-        unset($arParameters['IgnorePayment']);
-        return $arParameters ;
-    }
 
-    function check_extend_string($arExtend = array(),$InvoiceMark = ''){
-        foreach ($this->arPayMentExtend as $key => $value) {
-            if(!isset($arExtend[$key])) $arExtend[$key] = $value;
-        }
+
+class AioChargeback extends Aio
+{
+    static function CheckOut($arParameters = array(), $HashKey='',$HashIV='',$ServiceURL=''){
+
+        // 變數宣告。
+        $arErrors = array();
+        $arFeedback = array();
         
-        //若有開發票，檢查一下發票參數
-        if($InvoiceMark == 'Y') $arExtend = $this->check_invoiceString($arExtend);
-        return $arExtend ;
-    }
-
-    function filter_string($arExtend = array(),$InvoiceMark = ''){
-       
-        $arPayMentExtend = ($InvoiceMark == '')? array_keys($this->arPayMentExtend) : array_merge(array_keys($this->arPayMentExtend),$this->arInvoice);
-        foreach ($arExtend as $key => $value) {
-            if (!in_array($key,$arPayMentExtend )) {
-                unset($arExtend[$key]);
-            }
-        }
-        return $arExtend ;
-    }
-    //檢查商品
-    function check_goods($arParameters = array()){
-        // 檢查產品名稱。
-        $arErrors   = array();
-        $szItemName = '';
-        if (sizeof($arParameters['Items']) > 0) {
-            foreach ($arParameters['Items'] as $keys => $value) {
-                $szItemName .= vsprintf('#%s %d %s x %u', $arParameters['Items'][$keys]);
-                if (!array_key_exists('ItemURL', $arParameters)) {
-                    $arParameters['ItemURL'] = $arParameters['Items'][$keys]['URL'];
-                }
-            }
-
-            if (strlen($szItemName) > 0) {
-                $szItemName = mb_substr($szItemName, 1, 200);
-                $arParameters['ItemName'] = $szItemName ;
-            }
+        $szCheckMacValue = CheckMacValue::generate($arParameters,$HashKey,$HashIV,0);
+        $arParameters["CheckMacValue"] = $szCheckMacValue;
+        // 送出查詢並取回結果。
+        $szResult = self::ServerPost($arParameters,$ServiceURL);
+        // 檢查結果資料。
+        if ($szResult == '1|OK') {
+            $arFeedback['RtnCode'] = '1';
+            $arFeedback['RtnMsg'] = 'OK';
         } else {
-            array_push($arErrors, "Goods information not found.");
+            array_push($arErrors, str_replace('-', ': ', $szResult));
         }
 
-        if(sizeof($arErrors)>0) throw new Exception(join('<br>', $arErrors));
+        if (sizeof($arErrors) > 0) {
+            throw new Exception(join('- ', $arErrors));
+        }
 
-        unset($arParameters['Items']);
-        return $arParameters ;
+        return $arFeedback;
+
     }
-
 }
 
-/**
-* 付款方式:TopUpUsed
-*/
-class allPay_TopUpUsed extends Verification
+
+class AioCapture extends Aio
 {
-    public  $arPayMentExtend = array();
+    static function CheckOut($arParameters=array(),$HashKey='',$HashIV='',$ServiceURL=''){
 
-    //檢查共同參數
-    function check_string($arParameters = array() ,$ServiceURL = '' ,$HashKey = '' ,$HashIV = ''){
-        parent::check_string($arParameters,$ServiceURL,$HashKey,$HashIV);
-        if (!$arParameters['PlatformID'])  unset($arParameters['PlatformID']); 
-        unset($arParameters['IgnorePayment']);
-        return $arParameters ;
-    }
- 
-    //檢查延伸參數
-    function check_extend_string($arExtend = array(),$InvoiceMark = ''){
-        //若有開發票，檢查一下發票參數
-        if($InvoiceMark == 'Y') $arExtend = $this->check_invoiceString($arExtend);
-        return $arExtend ;
-    }
-
-    function filter_string($arExtend = array(),$InvoiceMark = ''){
-        return $arExtend ;
-    }
-    //檢查商品
-    function check_goods($arParameters = array()){
-        // 檢查產品名稱。
         $arErrors   = array();
-        $szItemName = '';
-        if (sizeof($arParameters['Items']) > 0) {
-            foreach ($arParameters['Items'] as $keys => $value) {
-                $szItemName .= vsprintf('#%s %d %s x %u', $arParameters['Items'][$keys]);
-                if (!array_key_exists('ItemURL', $arParameters)) {
-                    $arParameters['ItemURL'] = $arParameters['Items'][$keys]['URL'];
-                }
-            }
+        $arFeedback = array();
+        
+        $szCheckMacValue = CheckMacValue::generate($arParameters,$HashKey,$HashIV,0);
+        $arParameters["CheckMacValue"] = $szCheckMacValue;
 
-            if (strlen($szItemName) > 0) {
-                $szItemName = mb_substr($szItemName, 1, 200);
-                $arParameters['ItemName'] = $szItemName ;
-            }
-        } else {
-            array_push($arErrors, "Goods information not found.");
+        // 送出查詢並取回結果。
+        $szResult = self::ServerPost($arParameters,$ServiceURL);
+
+        // 轉結果為陣列。
+        parse_str($szResult, $arParameters);
+
+        // 重新整理回傳參數。
+        foreach ($arParameters as $keys => $value) {
+            $arFeedback[$keys] = $value;
         }
 
-        if(sizeof($arErrors)>0) throw new Exception(join('<br>', $arErrors));
-
-        unset($arParameters['Items']);
-        return $arParameters ;
-    }
-
-}
-
-/**
-*  付款方式：全功能
-*/
-class allPay_ALL extends Verification
-{
-    public  $arPayMentExtend = array();
-    
-    //檢查共同參數
-    function check_string($arParameters = array() ,$ServiceURL = '' ,$HashKey = '' ,$HashIV = ''){
-        parent::check_string($arParameters,$ServiceURL,$HashKey,$HashIV);
-        if (!$arParameters['PlatformID'])  unset($arParameters['PlatformID']); 
-        return $arParameters ;
-    }
-
-    //檢查ALL的延伸參數
-    function check_extend_string($arExtend = array(),$InvoiceMark = ''){
-        //若有開發票，檢查一下發票參數
-        if($InvoiceMark == 'Y') $arExtend = $this->check_invoiceString($arExtend);
-        return $arExtend ;
-    }
-
-    function filter_string($arExtend = array(),$InvoiceMark = ''){
-        return $arExtend ;
-    }
-    //檢查商品
-    function check_goods($arParameters = array()){
-        // 檢查產品名稱。
-        $arErrors           = array();
-        $szAlipayItemName   = '';
-        $szAlipayItemCounts = '';
-        $szAlipayItemPrice  = '';
-
-        $szItemName = '';
-        if (sizeof($arParameters['Items']) > 0) {
-            foreach ($arParameters['Items'] as $keys => $value) {
-                $szItemName .= vsprintf('#%s %d %s x %u', $arParameters['Items'][$keys]);
-                //for 支付寶
-                $szAlipayItemName .= sprintf('#%s', $arParameters['Items'][$keys]['Name']);
-                $szAlipayItemCounts .= sprintf('#%u', $arParameters['Items'][$keys]['Quantity']);
-                $szAlipayItemPrice .= sprintf('#%d', $arParameters['Items'][$keys]['Price']);
-
-                if (!array_key_exists('ItemURL', $arParameters)) {
-                    $arParameters['ItemURL'] = $arParameters['Items'][$keys]['URL'];
-                }
-            }
-
-            if (strlen($szItemName) > 0) {
-                $szItemName = mb_substr($szItemName, 1, 200);
-                $arParameters['ItemName'] = $szItemName ;
-            }
-            if (strlen($szAlipayItemName) > 0) {
-                $szAlipayItemName = mb_substr($szAlipayItemName, 1, 200);
-            }
-            if (strlen($szAlipayItemCounts) > 0) {
-                $szAlipayItemCounts = mb_substr($szAlipayItemCounts, 1, 100);
-            }
-            if (strlen($szAlipayItemPrice) > 0) {
-                $szAlipayItemPrice = mb_substr($szAlipayItemPrice, 1, 20);
-            }
-
-            $arParameters['AlipayItemName']   = $szAlipayItemName;
-            $arParameters['AlipayItemCounts'] = $szAlipayItemCounts;
-            $arParameters['AlipayItemPrice']  = $szAlipayItemPrice;
-
-        } else {
-            array_push($arErrors, "Goods information not found.");
+        if (sizeof($arErrors) > 0) {
+            throw new Exception(join('- ', $arErrors));
         }
 
-        if(sizeof($arErrors)>0) throw new Exception(join('<br>', $arErrors));
-        unset($arParameters['Items']);
-        return $arParameters ;
-    }
+        return $arFeedback;
 
+    }
 }
+
+
+
+
+
+
+
+
 
 Abstract class Verification
 {
@@ -1664,22 +909,9 @@ Abstract class Verification
             "InvType"
         );
     //檢查共同參數
-    protected function check_string($arParameters = array() ,$ServiceURL = '' ,$HashKey = '' ,$HashIV = ''){
+    public function check_string($arParameters = array()){
         
         $arErrors = array();
-
-        if (strlen($ServiceURL) == 0) {
-            array_push($arErrors, 'ServiceURL is required.');
-        }
-        if (strlen($ServiceURL) > 200) {
-            array_push($arErrors, 'ServiceURL max langth as 200.');
-        }
-        if (strlen($HashKey) == 0) {
-            array_push($arErrors, 'HashKey is required.');
-        }
-        if (strlen($HashIV) == 0) {
-            array_push($arErrors, 'HashIV is required.');
-        }
         if (strlen($arParameters['MerchantID']) == 0) {
             array_push($arErrors, 'MerchantID is required.');
         }
@@ -1986,73 +1218,742 @@ Abstract class Verification
 }
 
 
-    /**
-    * 功能類
-    */
-    Abstract class Aio 
-    {
+/**
+*  付款方式：超商代碼
+*/
+class allPay_CVS extends Verification
+{
+    public  $arPayMentExtend = array(
+                            'Desc_1'           =>'',
+                            'Desc_2'           =>'',
+                            'Desc_3'           =>'',
+                            'Desc_4'           =>'',
+                            'PaymentInfoURL'   =>'',
+                            'ClientRedirectURL'=>'',
+                            'StoreExpireDate'  =>''
+                        );
+    //檢查共同參數
+    function check_string($arParameters = array()){
+        parent::check_string($arParameters);
+        if (!$arParameters['PlatformID'])  unset($arParameters['PlatformID']); 
+        unset($arParameters['IgnorePayment']);
+        return $arParameters ;
+    }
+    //檢查CVS的延伸參數
+    function check_extend_string($arExtend = array(),$InvoiceMark = ''){
 
-        //產生檢查碼
-        function generateCheckMacValue($arParameters = array(),$HashKey = '' ,$HashIV = '',$encType = 0){
-            $sMacValue = '' ;
-        
-            if(isset($arParameters))
-            {
-                // 資料排序 php 5.3以下不支援
-                uksort($arParameters, array('Aio','merchantSort'));
-               
-                // 組合字串
-                $sMacValue = 'HashKey=' . $HashKey ;
-                foreach($arParameters as $key => $value)
-                {
-                    $sMacValue .= '&' . $key . '=' . $value ;
-                }
-            
-                $sMacValue .= '&HashIV=' . $HashIV ;    
-            
-                // URL Encode編碼     
-                $sMacValue = urlencode($sMacValue); 
-            
-                // 轉成小寫
-                $sMacValue = strtolower($sMacValue);        
-            
-                // 取代為與 dotNet 相符的字元
-                $sMacValue = str_replace('%2d', '-', $sMacValue);
-                $sMacValue = str_replace('%5f', '_', $sMacValue);
-                $sMacValue = str_replace('%2e', '.', $sMacValue);
-                $sMacValue = str_replace('%21', '!', $sMacValue);
-                $sMacValue = str_replace('%2a', '*', $sMacValue);
-                $sMacValue = str_replace('%28', '(', $sMacValue);
-                $sMacValue = str_replace('%29', ')', $sMacValue);
-                                
-                // 編碼
-                switch ($encType) {
-                    case EncryptType::ENC_SHA256:
-                        // SHA256 編碼
-                        $sMacValue = hash('sha256', $sMacValue);
-                    break;
-                
-                    case EncryptType::ENC_MD5:
-                    default:
-                    // MD5 編碼
-                        $sMacValue = md5($sMacValue);
-                }
-
-                $sMacValue = strtoupper($sMacValue);
-            }  
-        
-            return $sMacValue ;
+        //沒設定參數的話，就給預設參數
+        foreach ($this->arPayMentExtend as $key => $value) {
+            if(!isset($arExtend[$key])) $arExtend[$key] = $value;
         }
 
-        /**
-        * 自訂排序使用
-        */
-        private static function merchantSort($a,$b)
-        {
-            return strcasecmp($a, $b);
-        }
+        //若有開發票，檢查一下發票參數
+        if($InvoiceMark == 'Y') $arExtend = $this->check_invoiceString($arExtend);
+        return $arExtend ;
 
     }
+    
+    //過濾多餘參數
+    function filter_string($arExtend = array(),$InvoiceMark = '')
+    {
+        $arPayMentExtend = ($InvoiceMark == '')? array_keys($this->arPayMentExtend) : array_merge(array_keys($this->arPayMentExtend),$this->arInvoice);
+        foreach ($arExtend as $key => $value) {
+            if (!in_array($key,$arPayMentExtend )) {
+                unset($arExtend[$key]);
+            }
+        }
+        return $arExtend ;
+    }
+
+    //檢查商品
+    function check_goods($arParameters = array()){
+        // 檢查產品名稱。
+        $szItemName = '';
+        $arErrors   = array();
+        if (sizeof($arParameters['Items']) > 0) {
+            foreach ($arParameters['Items'] as $keys => $value) {
+                $szItemName .= vsprintf('#%s %d %s x %u', $arParameters['Items'][$keys]);
+                if (!array_key_exists('ItemURL', $arParameters)) {
+                    $arParameters['ItemURL'] = $arParameters['Items'][$keys]['URL'];
+                }
+            }
+
+            if (strlen($szItemName) > 0) {
+                $szItemName = mb_substr($szItemName, 1, 200);
+                $arParameters['ItemName'] = $szItemName ;
+            }
+        } else {
+            array_push($arErrors, "Goods information not found.");
+        }
+
+        if(sizeof($arErrors)>0) throw new Exception(join('<br>', $arErrors));
+
+        unset($arParameters['Items']);
+        return $arParameters ;
+    }
+
+}
+
+
+/**
+* 付款方式 : BARCODE 
+*/
+class allPay_BARCODE extends Verification
+{
+    public  $arPayMentExtend = array(
+                            'Desc_1'           =>'',
+                            'Desc_2'           =>'',
+                            'Desc_3'           =>'',
+                            'Desc_4'           =>'',
+                            'PaymentInfoURL'   =>'',
+                            'ClientRedirectURL'=>'',
+                            'StoreExpireDate'  =>''
+                        );
+
+    //檢查共同參數
+    function check_string($arParameters = array()){
+        parent::check_string($arParameters);
+        if (!$arParameters['PlatformID'])  unset($arParameters['PlatformID']); 
+        unset($arParameters['IgnorePayment']);
+        return $arParameters ;
+    }
+    
+    //檢查BARCODE的延伸參數
+    function check_extend_string($arExtend = array(),$InvoiceMark = ''){
+
+        //沒設定參數的話，就給預設參數
+        foreach ($this->arPayMentExtend as $key => $value) {
+            if(!isset($arExtend[$key])) $arExtend[$key] = $value;
+        }
+
+        //若有開發票，檢查一下發票參數
+        if($InvoiceMark == 'Y') $arExtend = $this->check_invoiceString($arExtend);
+        return $arExtend ;
+
+    }
+    
+    //過濾多餘參數
+    function filter_string($arExtend = array(),$InvoiceMark = '')
+    {
+        $arPayMentExtend = ($InvoiceMark == '')? array_keys($this->arPayMentExtend) : array_merge(array_keys($this->arPayMentExtend),$this->arInvoice);
+        foreach ($arExtend as $key => $value) {
+            if (!in_array($key,$arPayMentExtend )) {
+                unset($arExtend[$key]);
+            }
+        }
+        return $arExtend ;
+    }
+        //檢查商品
+    function check_goods($arParameters = array()){
+        // 檢查產品名稱。
+        $szItemName = '';
+        $arErrors   = array();
+        if (sizeof($arParameters['Items']) > 0) {
+            foreach ($arParameters['Items'] as $keys => $value) {
+                $szItemName .= vsprintf('#%s %d %s x %u', $arParameters['Items'][$keys]);
+                if (!array_key_exists('ItemURL', $arParameters)) {
+                    $arParameters['ItemURL'] = $arParameters['Items'][$keys]['URL'];
+                }
+            }
+
+            if (strlen($szItemName) > 0) {
+                $szItemName = mb_substr($szItemName, 1, 200);
+                $arParameters['ItemName'] = $szItemName ;
+            }
+        } else {
+            array_push($arErrors, "Goods information not found.");
+        }
+
+        if(sizeof($arErrors)>0) throw new Exception(join('<br>', $arErrors));
+
+        unset($arParameters['Items']);
+        return $arParameters ;
+    }
+
+}
+
+/**
+*  付款方式 ATM
+*/
+
+class allPay_ATM extends Verification
+{
+    public  $arPayMentExtend = array(
+                            'ExpireDate'       => 3,
+                            'PaymentInfoURL'   => '',
+                            'ClientRedirectURL'=> '',
+                        );
+
+    //檢查共同參數
+    function check_string($arParameters = array()){
+        parent::check_string($arParameters);
+        if (!$arParameters['PlatformID'])  unset($arParameters['PlatformID']); 
+        unset($arParameters['IgnorePayment']);
+        return $arParameters ;
+    }
+
+    //檢查ATM的延伸參數
+    function check_extend_string($arExtend = array(),$InvoiceMark = ''){
+        //沒設定參數的話，就給預設參數
+        foreach ($this->arPayMentExtend as $key => $value) {
+            if(!isset($arExtend[$key])) $arExtend[$key] = $value;
+        }
+        
+        //若有開發票，檢查一下發票參數
+        if($InvoiceMark == 'Y') $arExtend = $this->check_invoiceString($arExtend);
+        return $arExtend ;
+
+    }
+    
+    //過濾多餘參數
+    function filter_string($arExtend = array(),$InvoiceMark = '')
+    {
+        $arPayMentExtend = ($InvoiceMark == '')? array_keys($this->arPayMentExtend) : array_merge(array_keys($this->arPayMentExtend),$this->arInvoice);
+        foreach ($arExtend as $key => $value) {
+            if (!in_array($key,$arPayMentExtend )) {
+                unset($arExtend[$key]);
+            }
+        }
+        return $arExtend ;
+    }
+
+    //檢查商品
+    function check_goods($arParameters = array()){
+        // 檢查產品名稱。
+        $szItemName = '';
+        $arErrors   = array();
+        if (sizeof($arParameters['Items']) > 0) {
+            foreach ($arParameters['Items'] as $keys => $value) {
+                $szItemName .= vsprintf('#%s %d %s x %u', $arParameters['Items'][$keys]);
+                if (!array_key_exists('ItemURL', $arParameters)) {
+                    $arParameters['ItemURL'] = $arParameters['Items'][$keys]['URL'];
+                }
+            }
+
+            if (strlen($szItemName) > 0) {
+                $szItemName = mb_substr($szItemName, 1, 200);
+                $arParameters['ItemName'] = $szItemName ;
+            }
+        } else {
+            array_push($arErrors, "Goods information not found.");
+        }
+
+        if(sizeof($arErrors)>0) throw new Exception(join('<br>', $arErrors));
+
+        unset($arParameters['Items']);
+        return $arParameters ;
+    }
+
+
+}
+
+/**
+*  付款方式 WebATM
+*/
+
+class allPay_WebATM extends Verification
+{
+    public  $arPayMentExtend = array();
+   
+    //檢查共同參數
+    function check_string($arParameters = array()){
+        parent::check_string($arParameters);
+        if (!$arParameters['PlatformID'])  unset($arParameters['PlatformID']); 
+        unset($arParameters['IgnorePayment']);
+        return $arParameters ;
+    }
+
+    //檢查WebATM的延伸參數
+    function check_extend_string($arExtend = array(),$InvoiceMark = ''){
+        //沒設定參數的話，就給預設參數
+        foreach ($this->arPayMentExtend as $key => $value) {
+            if(!isset($arExtend[$key])) $arExtend[$key] = $value;
+        }
+        
+        //若有開發票，檢查一下發票參數
+        if($InvoiceMark == 'Y') $arExtend = $this->check_invoiceString($arExtend);
+        return $arExtend ;
+
+    }
+    
+    //過濾多餘參數
+    function filter_string($arExtend = array(),$InvoiceMark = '')
+    {
+        $arPayMentExtend = ($InvoiceMark == '')? array_keys($this->arPayMentExtend) : array_merge(array_keys($this->arPayMentExtend),$this->arInvoice);
+        foreach ($arExtend as $key => $value) {
+            if (!in_array($key,$arPayMentExtend )) {
+                unset($arExtend[$key]);
+            }
+        }
+        return $arExtend ;
+    }
+    //檢查商品
+    function check_goods($arParameters = array()){
+        // 檢查產品名稱。
+        $arErrors   = array();
+        $szItemName = '';
+        if (sizeof($arParameters['Items']) > 0) {
+            foreach ($arParameters['Items'] as $keys => $value) {
+                $szItemName .= vsprintf('#%s %d %s x %u', $arParameters['Items'][$keys]);
+                if (!array_key_exists('ItemURL', $arParameters)) {
+                    $arParameters['ItemURL'] = $arParameters['Items'][$keys]['URL'];
+                }
+            }
+
+            if (strlen($szItemName) > 0) {
+                $szItemName = mb_substr($szItemName, 1, 200);
+                $arParameters['ItemName'] = $szItemName ;
+            }
+        } else {
+            array_push($arErrors, "Goods information not found.");
+        }
+
+        if(sizeof($arErrors)>0) throw new Exception(join('<br>', $arErrors));
+
+        unset($arParameters['Items']);
+        return $arParameters ;
+    }
+
+
+}
+
+
+/**
+* 付款方式 : Alipay
+*/
+class allPay_Alipay extends Verification
+{
+    public  $arPayMentExtend = array(
+                            'Email'           => '',
+                            'PhoneNo'         => '',
+                            'UserName'        => '',
+                            'AlipayItemName'  => '',
+                            'AlipayItemCounts'=> '',
+                            'AlipayItemPrice' => ''
+                        );
+    //檢查共同參數
+    function check_string($arParameters = array()){
+        parent::check_string($arParameters);
+        if (!$arParameters['PlatformID'])  unset($arParameters['PlatformID']); 
+        unset($arParameters['IgnorePayment']);
+        return $arParameters ;
+    }
+
+    //檢查Alipay的延伸參數
+    function check_extend_string($arExtend = array(),$InvoiceMark = ''){
+        $arErrors = array();
+        foreach ($this->arPayMentExtend as $value) {
+            if(!array_key_exists($value, $arExtend)) array_push($arErrors, $value." is required");
+        }
+
+        if(empty($arExtend['AlipayItemName']) || empty($arExtend['AlipayItemCounts'])  || empty($arExtend['AlipayItemPrice']) ){
+            array_push($arErrors, 'AlipayItemName , AlipayItemCounts ,AlipayItemPrice is required');
+        }
+
+        if(sizeof($arErrors)>0) throw new Exception(join('<br>', $arErrors));
+                
+        //若有開發票，檢查一下發票參數
+        if($InvoiceMark == 'Y') $arExtend = $this->check_invoiceString($arExtend);
+        return $arExtend ;
+
+    }
+    
+    //過濾多餘參數
+    function filter_string($arExtend = array(),$InvoiceMark = '')
+    {
+        $arPayMentExtend = ($InvoiceMark == '')? $this->arPayMentExtend : array_merge($this->arPayMentExtend,$this->arInvoice);
+        foreach ($arExtend as $key => $value) {
+            if (!in_array($key,$arPayMentExtend )) {
+                unset($arExtend[$key]);
+            }
+        }
+        return $arExtend ;
+    }
+    //檢查商品
+    function check_goods($arParameters = array()){
+        // 檢查產品名稱。
+        $arErrors           = array();
+        $szAlipayItemName   = '';
+        $szAlipayItemCounts = '';
+        $szAlipayItemPrice  = '';        
+        if (sizeof($arParameters['Items']) > 0) {
+            foreach ($arParameters['Items'] as $keys => $value) {
+                $szItemName .= vsprintf('#%s %d %s x %u', $arParameters['Items'][$keys]);
+                //for 支付寶
+                $szAlipayItemName .= sprintf('#%s', $arParameters['Items'][$keys]['Name']);
+                $szAlipayItemCounts .= sprintf('#%u', $arParameters['Items'][$keys]['Quantity']);
+                $szAlipayItemPrice .= sprintf('#%d', $arParameters['Items'][$keys]['Price']);
+
+                if (!array_key_exists('ItemURL', $arParameters)) {
+                    $arParameters['ItemURL'] = $arParameters['Items'][$keys]['URL'];
+                }
+            }
+
+            if (strlen($szItemName) > 0) {
+                $szItemName = mb_substr($szItemName, 1, 200);
+                $arParameters['ItemName'] = $szItemName ;
+            }
+            if (strlen($szAlipayItemName) > 0) {
+                $szAlipayItemName = mb_substr($szAlipayItemName, 1, 200);
+            }
+            if (strlen($szAlipayItemCounts) > 0) {
+                $szAlipayItemCounts = mb_substr($szAlipayItemCounts, 1, 100);
+            }
+            if (strlen($szAlipayItemPrice) > 0) {
+                $szAlipayItemPrice = mb_substr($szAlipayItemPrice, 1, 20);
+            }
+
+            $arParameters['AlipayItemName']   = $szAlipayItemName;
+            $arParameters['AlipayItemCounts'] = $szAlipayItemCounts;
+            $arParameters['AlipayItemPrice']  = $szAlipayItemPrice;
+
+        } else {
+            array_push($arErrors, "Goods information not found.");
+        }
+
+        if(sizeof($arErrors)>0) throw new Exception(join('<br>', $arErrors));
+        unset($arParameters['Items']);
+        return $arParameters ;
+
+    }
+
+}
+/**
+* 付款方式：Tenpay
+*/
+class allPay_Tenpay extends Verification
+{
+    public  $arPayMentExtend = array('ExpireTime' => '');
+    
+    //檢查共同參數
+    function check_string($arParameters = array()){
+        parent::check_string($arParameters);
+        if (!$arParameters['PlatformID'])  unset($arParameters['PlatformID']); 
+        unset($arParameters['IgnorePayment']);
+        return $arParameters ;
+    }
+     
+    //檢查Tenpay的延伸參數
+    function check_extend_string($arExtend = array(),$InvoiceMark = ''){
+        //沒設定參數的話，就給預設參數
+        foreach ($this->arPayMentExtend as $key => $value) {
+            if(!isset($arExtend[$key])) $arExtend[$key] = $value;
+        }
+        
+        //若有開發票，檢查一下發票參數
+        if($InvoiceMark == 'Y') $arExtend = $this->check_invoiceString($arExtend);
+        return $arExtend ;
+
+    }
+    
+    //過濾多餘參數
+    function filter_string($arExtend = array(),$InvoiceMark = '')
+    {
+        $arPayMentExtend = ($InvoiceMark == '')? array_keys($this->arPayMentExtend) : array_merge(array_keys($this->arPayMentExtend),$this->arInvoice);
+        foreach ($arExtend as $key => $value) {
+            if (!in_array($key,$arPayMentExtend )) {
+                unset($arExtend[$key]);
+            }
+        }
+        return $arExtend ;
+    }
+    //檢查商品
+    function check_goods($arParameters = array()){
+        // 檢查產品名稱。
+        $szItemName = '';
+        $arErrors   = array();
+        if (sizeof($arParameters['Items']) > 0) {
+            foreach ($arParameters['Items'] as $keys => $value) {
+                $szItemName .= vsprintf('#%s %d %s x %u', $arParameters['Items'][$keys]);
+                if (!array_key_exists('ItemURL', $arParameters)) {
+                    $arParameters['ItemURL'] = $arParameters['Items'][$keys]['URL'];
+                }
+            }
+
+            if (strlen($szItemName) > 0) {
+                $szItemName = mb_substr($szItemName, 1, 200);
+                $arParameters['ItemName'] = $szItemName ;
+            }
+        } else {
+            array_push($arErrors, "Goods information not found.");
+        }
+
+        if(sizeof($arErrors)>0) throw new Exception(join('<br>', $arErrors));
+
+        unset($arParameters['Items']);
+        return $arParameters ;
+    }
+
+}
+
+/**
+* 付款方式 : 信用卡
+*/
+class allPay_Credit extends Verification
+{
+    public $arPayMentExtend = array(
+                                    "CreditInstallment" => 0,
+                                    "InstallmentAmount" => 0, 
+                                    "Redeem"            => FALSE, 
+                                    "UnionPay"          => FALSE,
+                                    "Language"          => '',
+                                    "PeriodAmount"      => '',
+                                    "PeriodType"        => '',  
+                                    "Frequency"         => '',  
+                                    "ExecTimes"         => ''
+                                );
+    //檢查共同參數
+    function check_string($arParameters = array()){
+        parent::check_string($arParameters);
+        if (!$arParameters['PlatformID'])  unset($arParameters['PlatformID']); 
+        unset($arParameters['IgnorePayment']);
+        return $arParameters ;
+    }
+
+    function check_extend_string($arExtend = array(),$InvoiceMark = ''){
+        foreach ($this->arPayMentExtend as $key => $value) {
+            if(!isset($arExtend[$key])) $arExtend[$key] = $value;
+        }
+        
+        //若有開發票，檢查一下發票參數
+        if($InvoiceMark == 'Y') $arExtend = $this->check_invoiceString($arExtend);
+        return $arExtend ;
+    }
+
+    function filter_string($arExtend = array(),$InvoiceMark = ''){
+       
+        $arPayMentExtend = ($InvoiceMark == '')? array_keys($this->arPayMentExtend) : array_merge(array_keys($this->arPayMentExtend),$this->arInvoice);
+        foreach ($arExtend as $key => $value) {
+            if (!in_array($key,$arPayMentExtend )) {
+                unset($arExtend[$key]);
+            }
+        }
+        return $arExtend ;
+    }
+    //檢查商品
+    function check_goods($arParameters = array()){
+        // 檢查產品名稱。
+        $arErrors   = array();
+        $szItemName = '';
+        if (sizeof($arParameters['Items']) > 0) {
+            foreach ($arParameters['Items'] as $keys => $value) {
+                $szItemName .= vsprintf('#%s %d %s x %u', $arParameters['Items'][$keys]);
+                if (!array_key_exists('ItemURL', $arParameters)) {
+                    $arParameters['ItemURL'] = $arParameters['Items'][$keys]['URL'];
+                }
+            }
+
+            if (strlen($szItemName) > 0) {
+                $szItemName = mb_substr($szItemName, 1, 200);
+                $arParameters['ItemName'] = $szItemName ;
+            }
+        } else {
+            array_push($arErrors, "Goods information not found.");
+        }
+
+        if(sizeof($arErrors)>0) throw new Exception(join('<br>', $arErrors));
+
+        unset($arParameters['Items']);
+        return $arParameters ;
+    }
+
+}
+
+/**
+* 付款方式:TopUpUsed
+*/
+class allPay_TopUpUsed extends Verification
+{
+    public  $arPayMentExtend = array();
+
+    //檢查共同參數
+    function check_string($arParameters = array()){
+        parent::check_string($arParameters);
+        if (!$arParameters['PlatformID'])  unset($arParameters['PlatformID']); 
+        unset($arParameters['IgnorePayment']);
+        return $arParameters ;
+    }
+ 
+    //檢查延伸參數
+    function check_extend_string($arExtend = array(),$InvoiceMark = ''){
+        //若有開發票，檢查一下發票參數
+        if($InvoiceMark == 'Y') $arExtend = $this->check_invoiceString($arExtend);
+        return $arExtend ;
+    }
+
+    function filter_string($arExtend = array(),$InvoiceMark = ''){
+        return $arExtend ;
+    }
+    //檢查商品
+    function check_goods($arParameters = array()){
+        // 檢查產品名稱。
+        $arErrors   = array();
+        $szItemName = '';
+        if (sizeof($arParameters['Items']) > 0) {
+            foreach ($arParameters['Items'] as $keys => $value) {
+                $szItemName .= vsprintf('#%s %d %s x %u', $arParameters['Items'][$keys]);
+                if (!array_key_exists('ItemURL', $arParameters)) {
+                    $arParameters['ItemURL'] = $arParameters['Items'][$keys]['URL'];
+                }
+            }
+
+            if (strlen($szItemName) > 0) {
+                $szItemName = mb_substr($szItemName, 1, 200);
+                $arParameters['ItemName'] = $szItemName ;
+            }
+        } else {
+            array_push($arErrors, "Goods information not found.");
+        }
+
+        if(sizeof($arErrors)>0) throw new Exception(join('<br>', $arErrors));
+
+        unset($arParameters['Items']);
+        return $arParameters ;
+    }
+
+}
+
+/**
+*  付款方式：全功能
+*/
+class allPay_ALL extends Verification
+{
+    public  $arPayMentExtend = array();
+    
+    //檢查共同參數
+    function check_string($arParameters = array()){
+        parent::check_string($arParameters);
+        if (!$arParameters['PlatformID'])  unset($arParameters['PlatformID']); 
+        return $arParameters ;
+    }
+
+    //檢查ALL的延伸參數
+    function check_extend_string($arExtend = array(),$InvoiceMark = ''){
+        //若有開發票，檢查一下發票參數
+        if($InvoiceMark == 'Y') $arExtend = $this->check_invoiceString($arExtend);
+        return $arExtend ;
+    }
+
+    function filter_string($arExtend = array(),$InvoiceMark = ''){
+        return $arExtend ;
+    }
+    //檢查商品
+    function check_goods($arParameters = array()){
+        // 檢查產品名稱。
+        $arErrors           = array();
+        $szAlipayItemName   = '';
+        $szAlipayItemCounts = '';
+        $szAlipayItemPrice  = '';
+
+        $szItemName = '';
+        if (sizeof($arParameters['Items']) > 0) {
+            foreach ($arParameters['Items'] as $keys => $value) {
+                $szItemName .= vsprintf('#%s %d %s x %u', $arParameters['Items'][$keys]);
+                //for 支付寶
+                $szAlipayItemName .= sprintf('#%s', $arParameters['Items'][$keys]['Name']);
+                $szAlipayItemCounts .= sprintf('#%u', $arParameters['Items'][$keys]['Quantity']);
+                $szAlipayItemPrice .= sprintf('#%d', $arParameters['Items'][$keys]['Price']);
+
+                if (!array_key_exists('ItemURL', $arParameters)) {
+                    $arParameters['ItemURL'] = $arParameters['Items'][$keys]['URL'];
+                }
+            }
+
+            if (strlen($szItemName) > 0) {
+                $szItemName = mb_substr($szItemName, 1, 200);
+                $arParameters['ItemName'] = $szItemName ;
+            }
+            if (strlen($szAlipayItemName) > 0) {
+                $szAlipayItemName = mb_substr($szAlipayItemName, 1, 200);
+            }
+            if (strlen($szAlipayItemCounts) > 0) {
+                $szAlipayItemCounts = mb_substr($szAlipayItemCounts, 1, 100);
+            }
+            if (strlen($szAlipayItemPrice) > 0) {
+                $szAlipayItemPrice = mb_substr($szAlipayItemPrice, 1, 20);
+            }
+
+            $arParameters['AlipayItemName']   = $szAlipayItemName;
+            $arParameters['AlipayItemCounts'] = $szAlipayItemCounts;
+            $arParameters['AlipayItemPrice']  = $szAlipayItemPrice;
+
+        } else {
+            array_push($arErrors, "Goods information not found.");
+        }
+
+        if(sizeof($arErrors)>0) throw new Exception(join('<br>', $arErrors));
+        unset($arParameters['Items']);
+        return $arParameters ;
+    }
+
+}
+
+
+/**
+*  檢查碼
+*/
+class CheckMacValue{
+
+    static function generate($arParameters = array(),$HashKey = '' ,$HashIV = '',$encType = 0){
+        $sMacValue = '' ;
+        
+        if(isset($arParameters))
+        {   
+            unset($arParameters['CheckMacValue']);
+            // 資料排序 php 5.3以下不支援
+            uksort($arParameters, array('CheckMacValue','merchantSort'));
+               
+            // 組合字串
+            $sMacValue = 'HashKey=' . $HashKey ;
+            foreach($arParameters as $key => $value)
+            {
+                $sMacValue .= '&' . $key . '=' . $value ;
+            }
+            
+            $sMacValue .= '&HashIV=' . $HashIV ;    
+            
+            // URL Encode編碼     
+            $sMacValue = urlencode($sMacValue); 
+            
+            // 轉成小寫
+            $sMacValue = strtolower($sMacValue);        
+            
+            // 取代為與 dotNet 相符的字元
+            $sMacValue = str_replace('%2d', '-', $sMacValue);
+            $sMacValue = str_replace('%5f', '_', $sMacValue);
+            $sMacValue = str_replace('%2e', '.', $sMacValue);
+            $sMacValue = str_replace('%21', '!', $sMacValue);
+            $sMacValue = str_replace('%2a', '*', $sMacValue);
+            $sMacValue = str_replace('%28', '(', $sMacValue);
+            $sMacValue = str_replace('%29', ')', $sMacValue);
+                                
+            // 編碼
+            switch ($encType) {
+                case EncryptType::ENC_SHA256:
+                    // SHA256 編碼
+                    $sMacValue = hash('sha256', $sMacValue);
+                break;
+                
+                case EncryptType::ENC_MD5:
+                default:
+                // MD5 編碼
+                    $sMacValue = md5($sMacValue);
+            }
+
+                $sMacValue = strtoupper($sMacValue);
+        }  
+        
+        return $sMacValue ;
+    }
+    /**
+    * 自訂排序使用
+    */
+    private static function merchantSort($a,$b)
+    {
+        return strcasecmp($a, $b);
+    }
+
+}
 
 
 ?>
