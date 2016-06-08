@@ -628,23 +628,17 @@ class Send extends Aio
         
         $arParameters = self::process($arParameters,$arExtend);
         //產生檢查碼
-        $szCheckMacValue = $this->generateCheckMacValue($this->arParameters,$this->HashKey,$this->HashIV,$this->arParameters['EncryptType']);
+        $szCheckMacValue = CheckMacValue::generate($arParameters,$HashKey,$HashIV,$arParameters['EncryptType']);
         
         $szHtml = '';
         $szHtml = '<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />';
-        $szHtml .= '<div style="text-align:center;" ><form id="__allpayForm" method="post" target="' . $target . '" action="' . $this->ServiceURL . '">';
-        foreach ($this->arParameters as $keys => $value) {
+        $szHtml .= '<div style="text-align:center;" ><form id="__allpayForm" method="post" target="' . $target . '" action="' . $ServiceURL . '">';
+        foreach ($arParameters as $keys => $value) {
             $szHtml .="<input type='hidden' name='$keys' value='$value' />";
         }
         $szHtml .= '<input type="hidden" name="CheckMacValue" value="' . $szCheckMacValue . '" />';
-        // 手動或自動送出表單。
-        if (!isset($paymentButton)) {
-            $szHtml .= '<script type="text/javascript">document.getElementById("__allpayForm").submit();</script>';
-        } else {
-            $szHtml .= '<input type="submit" id="__paymentButton" value="' . $paymentButton . '" />';
-        }
+        $szHtml .= '<input type="submit" id="__paymentButton" value="' . $paymentButton . '" />';
         $szHtml .= '</form></div>';
-        
         return  $szHtml ;
     }
 
