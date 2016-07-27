@@ -611,14 +611,23 @@ class Send extends Aio
         $szCheckMacValue = CheckMacValue::generate($arParameters,$HashKey,$HashIV,$arParameters['EncryptType']);
        
         //生成表單，自動送出
-        $szHtml = '<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />';
-        $szHtml .= '<div style="text-align:center;" ><form id="__allpayForm" method="post" target="' . $target . '" action="' . $ServiceURL . '">';
+        $szHtml =  '<!DOCTYPE html>';
+        $szHtml .= '<html>';
+        $szHtml .=     '<head>';
+        $szHtml .=         '<meta charset="utf-8">';
+        $szHtml .=     '</head>';
+        $szHtml .=     '<body>';
+        $szHtml .=         "<form id=\"__allpayForm\" method=\"post\" target=\"{$target}\" action=\"{$ServiceURL}\">";
+        
         foreach ($arParameters as $keys => $value) {
-            $szHtml .="<input type='hidden' name='$keys' value='$value' />";
+            $szHtml .=         "<input type=\"hidden\" name=\"{$keys}\" value='{$value}' />";
         }
-        $szHtml .= '<input type="hidden" name="CheckMacValue" value="' . $szCheckMacValue . '" />';
-        $szHtml .= '<script type="text/javascript">document.getElementById("__allpayForm").submit();</script>';
-        $szHtml .= '</form></div>';
+
+        $szHtml .=             "<input type=\"hidden\" name=\"CheckMacValue\" value=\"{$szCheckMacValue}\" />";
+        $szHtml .=         '</form>';
+        $szHtml .=         '<script type="text/javascript">document.getElementById("__allpayForm").submit();</script>';
+        $szHtml .=     '</body>';
+        $szHtml .= '</html>';
 
         echo $szHtml ;
         exit;
@@ -630,15 +639,23 @@ class Send extends Aio
         //產生檢查碼
         $szCheckMacValue = CheckMacValue::generate($arParameters,$HashKey,$HashIV,$arParameters['EncryptType']);
         
-        $szHtml = '';
-        $szHtml = '<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />';
-        $szHtml .= '<div style="text-align:center;" ><form id="__allpayForm" method="post" target="' . $target . '" action="' . $ServiceURL . '">';
+        $szHtml =  '<!DOCTYPE html>';
+        $szHtml .= '<html>';
+        $szHtml .=     '<head>';
+        $szHtml .=         '<meta charset="utf-8">';
+        $szHtml .=     '</head>';
+        $szHtml .=     '<body>';
+        $szHtml .=         "<form id=\"__allpayForm\" method=\"post\" target=\"{$target}\" action=\"{$ServiceURL}\">";
+
         foreach ($arParameters as $keys => $value) {
-            $szHtml .="<input type='hidden' name='$keys' value='$value' />";
+            $szHtml .=         "<input type=\"hidden\" name=\"{$keys}\" value='{$value}' />";
         }
-        $szHtml .= '<input type="hidden" name="CheckMacValue" value="' . $szCheckMacValue . '" />';
-        $szHtml .= '<input type="submit" id="__paymentButton" value="' . $paymentButton . '" />';
-        $szHtml .= '</form></div>';
+
+        $szHtml .=             "<input type=\"hidden\" name=\"CheckMacValue\" value=\"{$szCheckMacValue}\" />";
+        $szHtml .=             "<input type=\"submit\" id=\"__paymentButton\" value=\"{$paymentButton}\" />";
+        $szHtml .=         '</form>';
+        $szHtml .=     '</body>';
+        $szHtml .= '</html>';
         return  $szHtml ;
     }
 
