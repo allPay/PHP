@@ -581,7 +581,7 @@ class Send extends Aio
     //付款方式物件
     public static $PaymentObj ;
 
-    function process($arParameters = array(),$arExtend = array())
+    protected static function process($arParameters = array(),$arExtend = array())
     {
         //宣告付款方式物件
         $PaymentMethod    = 'allPay_'.$arParameters['ChoosePayment'];
