@@ -543,6 +543,10 @@ class AllInOne {
         return $arFeedback = AioCapture::CheckOut(array_merge($this->Capture,array("MerchantID" => $this->MerchantID)) ,$this->HashKey ,$this->HashIV ,$this->ServiceURL);
     }
 
+    function DoCapture(){
+        return $arFeedback = AioCapture::CheckOut(array_merge($this->Capture,array("MerchantID" => $this->MerchantID)) ,$this->HashKey ,$this->HashIV ,$this->ServiceURL);
+    }
+
 
     
 
