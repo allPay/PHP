@@ -540,7 +540,11 @@ class AllInOne {
     }
     
     function AioCapture(){
-        return $arFeedback = AioCapture::Capture(array_merge($this->Capture,array("MerchantID" => $this->MerchantID)) ,$this->HashKey ,$this->HashIV ,$this->ServiceURL);
+        return $arFeedback = AioCapture::CheckOut(array_merge($this->Capture,array("MerchantID" => $this->MerchantID)) ,$this->HashKey ,$this->HashIV ,$this->ServiceURL);
+    }
+
+    function DoCapture(){
+        return $arFeedback = AioCapture::CheckOut(array_merge($this->Capture,array("MerchantID" => $this->MerchantID)) ,$this->HashKey ,$this->HashIV ,$this->ServiceURL);
     }
 
 
@@ -553,9 +557,7 @@ class AllInOne {
 */
 abstract class Aio
 {
-    abstract static function CheckOut();
-
-    protected function ServerPost($parameters ,$ServiceURL) {
+    protected static function ServerPost($parameters ,$ServiceURL) {
         $ch = curl_init();
 
         curl_setopt($ch, CURLOPT_URL, $ServiceURL);
@@ -714,7 +716,7 @@ class QueryTradeInfo extends Aio
         if (sizeof($arErrors) == 0) {
             $arParameters["CheckMacValue"] = CheckMacValue::generate($arParameters,$HashKey,$HashIV,0);
             // 送出查詢並取回結果。
-            $szResult = parent::ServerPost($arParameters,$ServiceURL);
+            $szResult = self::ServerPost($arParameters,$ServiceURL);
             $szResult = str_replace(' ', '%20', $szResult);
             $szResult = str_replace('+', '%2B', $szResult);
             
@@ -760,7 +762,7 @@ class QueryPeriodCreditCardTradeInfo extends Aio
         if (sizeof($arErrors) == 0) {
             $arParameters["CheckMacValue"] = CheckMacValue::generate($arParameters,$HashKey,$HashIV,0);
             // 送出查詢並取回結果。
-            $szResult = parent::ServerPost($arParameters,$ServiceURL);
+            $szResult = self::ServerPost($arParameters,$ServiceURL);
             $szResult = str_replace(' ', '%20', $szResult);
             $szResult = str_replace('+', '%2B', $szResult);
             
