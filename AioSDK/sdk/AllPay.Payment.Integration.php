@@ -1711,7 +1711,8 @@ class allPay_Credit extends Verification
                                     "PeriodAmount"      => '',
                                     "PeriodType"        => '',  
                                     "Frequency"         => '',  
-                                    "ExecTimes"         => ''
+                                    "ExecTimes"         => '',
+                                    "PeriodReturnURL"   => ''
                                 );
     //檢查共同參數
     function check_string($arParameters = array()){
