@@ -553,8 +553,7 @@ class AllInOne {
 */
 abstract class Aio
 {
-    abstract static function CheckOut();
-
+    
     protected function ServerPost($parameters ,$ServiceURL) {
         $ch = curl_init();
 
