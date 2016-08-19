@@ -1,9 +1,8 @@
 <?php
-
 	/**
 	 * allPay Logistics integration
 	 *
-	 * @version 1.0
+	 * @version 1.1
 	 * @author  Shawn.Chang
 	 */
   
@@ -34,13 +33,13 @@
 		const MOBILE = 1;// 行動裝置
 	}
 	
-    // 歐付寶測試廠商編號
+    // 測試廠商編號
 	abstract class AllpayTestMerchantID {
 		const B2C = '2000132';// B2C
 		const C2C = '2000933';// C2C
 	}
 	
-    // 歐付寶正式環境網址
+    // 正式環境網址
 	abstract class AllpayURL {
 		const CVS_MAP = 'https://logistics.allpay.com.tw/Express/map';// 電子地圖
 		const SHIPPING_ORDER = 'https://logistics.allpay.com.tw/Express/Create';// 物流訂單建立
@@ -56,7 +55,7 @@
 		const PRINT_FAMILY_C2C_BILL = 'https://logistics.allpay.com.tw/Express/PrintFAMIC2COrderInfo';// 全家列印小白單(全家超商C2C)
 	}
 	
-    // 歐付寶正式測試環境網址
+    // 正式測試環境網址
 	abstract class AllpayTestURL {
         const CVS_MAP = 'https://logistics.allpay.com.tw/Express/map';// 電子地圖(測試環境有問題，直接使用正式環境URL)
 		const SHIPPING_ORDER = 'http://logistics-stage.allpay.com.tw/Express/Create';// 物流訂單建立
@@ -81,9 +80,9 @@
 	
     // 距離
 	abstract class Distance {
-		const SAME = '01';// 同縣市
-		const OTHER = '02';// 外縣市
-		const ISLAND = '03';// 離島
+		const SAME = '00';// 同縣市
+		const OTHER = '01';// 外縣市
+		const ISLAND = '02';// 離島
 	}
 	
     // 規格
@@ -272,8 +271,8 @@
 			$this->ValidateString('SenderName', $this->PostParams['SenderName'], 10);
 			$this->ValidatePhoneNumber('SenderPhone', $this->PostParams['SenderPhone'], true);
 			$this->ValidatePhoneNumber('SenderCellPhone', $this->PostParams['SenderCellPhone'], true);
-			// 物流類型(LogisticsType)為宅配(Home)時，寄件人電話(SenderPhone)或寄件人手機(SenderCellPhone)不可為空
 			if ($this->PostParams['LogisticsType'] == LogisticsType::HOME) {
+				// 物流類型(LogisticsType)為宅配(Home)時，寄件人電話(SenderPhone)或寄件人手機(SenderCellPhone)不可為空
 				if (empty($this->PostParams['SenderPhone']) and empty($this->PostParams['SenderCellPhone'])) {
 					throw new Exception('SenderPhone or SenderCellPhone is required when LogisticsType is Home.');
 				}
@@ -287,8 +286,8 @@
 			$this->ValidateString('ReceiverName', $this->PostParams['ReceiverName'], 10);
 			$this->ValidatePhoneNumber('ReceiverPhone', $this->PostParams['ReceiverPhone'], true);
 			$this->ValidatePhoneNumber('ReceiverCellPhone', $this->PostParams['ReceiverCellPhone'], true);
-			// 物流類型(LogisticsType)為宅配(Home)時，收件人電話(ReceiverPhone)或收件人手機(ReceiverCellPhone)不可為空
 			if ($this->PostParams['LogisticsType'] == LogisticsType::HOME) {
+				// 物流類型(LogisticsType)為宅配(Home)時，收件人電話(ReceiverPhone)或收件人手機(ReceiverCellPhone)不可為空
 				if (empty($this->PostParams['ReceiverPhone']) and empty($this->PostParams['ReceiverCellPhone'])) {
 					throw new Exception('ReceiverPhone or ReceiverCellPhone is required when LogisticsType is Home.');
 				}
@@ -313,6 +312,13 @@
 			
 			$this->ValidateString('Remark', $this->PostParams['Remark'], 200, true);
 			$this->ValidateID('PlatformID', $this->PostParams['PlatformID'], 10, true);
+			
+			// 物流類型(LogisticsType)為宅配(Home)且溫層(Temperature)為冷凍(0003)時，規格(Specification)不可為 150cm(0004)
+			if ($this->PostParams['LogisticsType'] == LogisticsType::HOME and $this->PostParams['Temperature'] == Temperature::FREEZE) {
+				if ($this->PostParams['Specification'] == Specification::CM_150) {
+					throw new Exception('Specification could not be 150cm(0004) when LogisticsType is Home and Temperature is FREEZE(0003).');
+				}
+			}
 			
 			// 產生 CheckMacValue
 			$this->PostParams['CheckMacValue'] = $this->GenCheckMacValue($this->PostParams, $this->HashKey, $this->HashIV);
@@ -436,8 +442,8 @@
 			$this->ValidateString('SenderName', $this->PostParams['SenderName'], 10);
 			$this->ValidatePhoneNumber('SenderPhone', $this->PostParams['SenderPhone'], true);
 			$this->ValidatePhoneNumber('SenderCellPhone', $this->PostParams['SenderCellPhone'], true);
-			// 物流類型(LogisticsType)為宅配(Home)時，寄件人電話(SenderPhone)或寄件人手機(SenderCellPhone)不可為空
 			if ($this->PostParams['LogisticsType'] == LogisticsType::HOME) {
+				// 物流類型(LogisticsType)為宅配(Home)時，寄件人電話(SenderPhone)或寄件人手機(SenderCellPhone)不可為空
 				if (empty($this->PostParams['SenderPhone']) and empty($this->PostParams['SenderCellPhone'])) {
 					throw new Exception('SenderPhone or SenderCellPhone is required when LogisticsType is Home.');
 				}
@@ -451,8 +457,8 @@
 			$this->ValidateString('ReceiverName', $this->PostParams['ReceiverName'], 10);
 			$this->ValidatePhoneNumber('ReceiverPhone', $this->PostParams['ReceiverPhone'], true);
 			$this->ValidatePhoneNumber('ReceiverCellPhone', $this->PostParams['ReceiverCellPhone'], true);
-			// 物流類型(LogisticsType)為宅配(Home)時，收件人電話(ReceiverPhone)或收件人手機(ReceiverCellPhone)不可為空
 			if ($this->PostParams['LogisticsType'] == LogisticsType::HOME) {
+				// 物流類型(LogisticsType)為宅配(Home)時，收件人電話(ReceiverPhone)或收件人手機(ReceiverCellPhone)不可為空
 				if (empty($this->PostParams['ReceiverPhone']) and empty($this->PostParams['ReceiverCellPhone'])) {
 					throw new Exception('ReceiverPhone or ReceiverCellPhone is required when LogisticsType is Home.');
 				}
@@ -476,6 +482,13 @@
 			
 			$this->ValidateString('Remark', $this->PostParams['Remark'], 200, true);
 			$this->ValidateID('PlatformID', $this->PostParams['PlatformID'], 10, true);
+			
+			// 物流類型(LogisticsType)為宅配(Home)且溫層(Temperature)為冷凍(0003)時，規格(Specification)不可為 150cm(0004)
+			if ($this->PostParams['LogisticsType'] == LogisticsType::HOME and $this->PostParams['Temperature'] == Temperature::FREEZE) {
+				if ($this->PostParams['Specification'] == Specification::CM_150) {
+					throw new Exception('Specification could not be 0004 when LogisticsType is Home and Temperature is 0003.');
+				}
+			}
 			
 			// 產生 CheckMacValue
 			$this->PostParams['CheckMacValue'] = $this->GenCheckMacValue($this->PostParams, $this->HashKey, $this->HashIV);
