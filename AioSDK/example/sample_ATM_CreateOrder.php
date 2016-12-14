@@ -31,7 +31,8 @@
         //ATM 延伸參數(可依系統需求選擇是否代入)
         $obj->SendExtend['ExpireDate'] = 3 ;     //繳費期限 (預設3天，最長60天，最短1天)
         $obj->SendExtend['PaymentInfoURL'] = ""; //伺服器端回傳付款相關資訊。
-
+		$obj->SendExtend['ClientRedirectURL'] = '';      //預設空值
+		
         # 電子發票參數
         /*
         $obj->Send['InvoiceMark'] = InvoiceState::Yes;
