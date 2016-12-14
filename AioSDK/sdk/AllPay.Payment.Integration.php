@@ -545,7 +545,7 @@ class AllInOne {
 abstract class Aio
 {
     
-    protected function ServerPost($parameters ,$ServiceURL) {
+    protected static function ServerPost($parameters ,$ServiceURL) {
         $ch = curl_init();
 
         curl_setopt($ch, CURLOPT_URL, $ServiceURL);
