@@ -451,7 +451,7 @@ class AllInOne {
     public $Query = 'Query';
     public $Action = 'Action';
     public $ChargeBack = 'ChargeBack';
-    public $EncryptType = EncryptType::ENC_MD5;
+    public $EncryptType = EncryptType::ENC_SHA256;
 
     function __construct() {
 
@@ -474,7 +474,7 @@ class AllInOne {
             "PlatformID"        => '',
             "InvoiceMark"       => InvoiceState::No,
             "Items"             => array(),
-            "EncryptType"       => EncryptType::ENC_MD5,
+            "EncryptType"       => EncryptType::ENC_SHA256,
             "UseRedeem"         => UseRedeem::No
         );
 
@@ -530,7 +530,8 @@ class AllInOne {
         return $arFeedback = AioChargeback::CheckOut(array_merge($this->ChargeBack,array("MerchantID" => $this->MerchantID)) ,$this->HashKey ,$this->HashIV ,$this->ServiceURL);
     }
     
-    function AioCapture(){
+    //合作特店申請撥款
+	function AioCapture(){
         return $arFeedback = AioCapture::Capture(array_merge($this->Capture,array("MerchantID" => $this->MerchantID)) ,$this->HashKey ,$this->HashIV ,$this->ServiceURL);
     }
 
@@ -545,20 +546,28 @@ class AllInOne {
 abstract class Aio
 {
     
-    protected function ServerPost($parameters ,$ServiceURL) {
-        $ch = curl_init();
+    protected static function ServerPost($parameters ,$ServiceURL) {
+		$ch = curl_init();
+		
+		if (FALSE === $ch) {
+			throw new Exception('curl failed to initialize');
+		}
+		
+		curl_setopt($ch, CURLOPT_URL, $ServiceURL);
+		curl_setopt($ch, CURLOPT_HEADER, FALSE);
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
+		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, TRUE);
+		curl_setopt($ch, CURLOPT_POST, TRUE);
+		curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($parameters));
+		$rs = curl_exec($ch);
+		
+		if (FALSE === $rs) {
+			throw new Exception(curl_error($ch), curl_errno($ch));	
+		}
+		
+		curl_close($ch);
 
-        curl_setopt($ch, CURLOPT_URL, $ServiceURL);
-        curl_setopt($ch, CURLOPT_HEADER, FALSE);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, TRUE);
-        curl_setopt($ch, CURLOPT_POST, TRUE);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($parameters));
-        $rs = curl_exec($ch);
-
-        curl_close($ch);
-
-        return $rs;
+		return $rs;
     }
 
 }
@@ -841,7 +850,7 @@ class AioChargeback extends Aio
 
 class AioCapture extends Aio
 {
-    static function CheckOut($arParameters=array(),$HashKey='',$HashIV='',$ServiceURL=''){
+    static function Capture($arParameters=array(),$HashKey='',$HashIV='',$ServiceURL=''){
 
         $arErrors   = array();
         $arFeedback = array();
@@ -1823,7 +1832,6 @@ class CheckMacValue{
         if(isset($arParameters))
         {   
             unset($arParameters['CheckMacValue']);
-            // 資料排序 php 5.3以下不支援
             uksort($arParameters, array('CheckMacValue','merchantSort'));
                
             // 組合字串
