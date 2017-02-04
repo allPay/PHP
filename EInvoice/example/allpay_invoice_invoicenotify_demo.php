@@ -6,8 +6,8 @@ try
 		include_once('AllPay_Invoice.php') ;
 		$allpay_invoice = new AllInvoice ;
 // 2.寫入基本介接參數
-		$allpay_invoice->Invoice_Method 	= 'INVOICE_TRIGGER';
-		$allpay_invoice->Invoice_Url 		= 'http://einvoice-stage.allpay.com.tw/Invoice/TriggerIssue' ;
+		$allpay_invoice->Invoice_Method 	= 'INVOICE_NOTIFY';
+		$allpay_invoice->Invoice_Url 		= 'http://einvoice-stage.allpay.com.tw/Notify/InvoiceNotify' ;
 		$allpay_invoice->MerchantID 		= '2000132' ;
 		$allpay_invoice->HashKey 		= 'ejCk326UnaZWKisg' ;
 		$allpay_invoice->HashIV 		= 'q9jcZX8Ib9LM8wYk' ; 
