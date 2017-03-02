@@ -12,7 +12,7 @@ try
 		
 		// 2.寫入基本介接參數
 		$allpay_invoice->Invoice_Method 		= 'INVOICE_VOID' ;
-		$allpay_invoice->Invoice_Url 			= 'http://einvoice-stage.allpay.com.tw/Invoice/IssueInvalid';
+		$allpay_invoice->Invoice_Url 			= 'https://einvoice-stage.allpay.com.tw/Invoice/IssueInvalid';
 		$allpay_invoice->MerchantID 			= '2000132';
 		$allpay_invoice->HashKey 			= 'ejCk326UnaZWKisg';
 		$allpay_invoice->HashIV 			= 'q9jcZX8Ib9LM8wYk';

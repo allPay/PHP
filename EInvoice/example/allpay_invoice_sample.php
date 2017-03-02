@@ -75,37 +75,37 @@ if (isset($VAR_POST['Invoice_Method']))
 	switch ($Invoice_Method)
 	{
 		case 'INVOICE':
-	        	$Invoice_Url = 'http://einvoice-stage.allpay.com.tw/Invoice/Issue' ;
+	        	$Invoice_Url = 'https://einvoice-stage.allpay.com.tw/Invoice/Issue' ;
 		break;
 		case 'INVOICE_DELAY':
-	        	$Invoice_Url = 'http://einvoice-stage.allpay.com.tw/Invoice/DelayIssue' ;
+	        	$Invoice_Url = 'https://einvoice-stage.allpay.com.tw/Invoice/DelayIssue' ;
 		break;
 		case 'ALLOWANCE':
-	        	$Invoice_Url = 'http://einvoice-stage.allpay.com.tw/Invoice/Allowance' ;
+	        	$Invoice_Url = 'https://einvoice-stage.allpay.com.tw/Invoice/Allowance' ;
 		break;
 		case 'INVOICE_VOID':
-	        	$Invoice_Url = 'http://einvoice-stage.allpay.com.tw/Invoice/IssueInvalid' ;
+	        	$Invoice_Url = 'https://einvoice-stage.allpay.com.tw/Invoice/IssueInvalid' ;
 		break;
 		case 'ALLOWANCE_VOID':
-	        	$Invoice_Url = 'http://einvoice-stage.allpay.com.tw/Invoice/AllowanceInvalid' ;
+	        	$Invoice_Url = 'https://einvoice-stage.allpay.com.tw/Invoice/AllowanceInvalid' ;
 		break;
 		case 'INVOICE_SEARCH':
-	        	$Invoice_Url = 'http://einvoice-stage.allpay.com.tw/Query/Issue' ;
+	        	$Invoice_Url = 'https://einvoice-stage.allpay.com.tw/Query/Issue' ;
 		break;
 		case 'INVOICE_VOID_SEARCH':
-	        	$Invoice_Url = 'http://einvoice-stage.allpay.com.tw/Query/IssueInvalid' ;
+	        	$Invoice_Url = 'https://einvoice-stage.allpay.com.tw/Query/IssueInvalid' ;
 		break;
 		case 'ALLOWANCE_SEARCH':
-	        	$Invoice_Url = 'http://einvoice-stage.allpay.com.tw/Query/Allowance' ;
+	        	$Invoice_Url = 'https://einvoice-stage.allpay.com.tw/Query/Allowance' ;
 		break;
 		case 'ALLOWANCE_VOID_SEARCH':
-	        	$Invoice_Url = 'http://einvoice-stage.allpay.com.tw/Query/AllowanceInvalid' ;
+	        	$Invoice_Url = 'https://einvoice-stage.allpay.com.tw/Query/AllowanceInvalid' ;
 		break;
 		case 'INVOICE_NOTIFY':
-	        	$Invoice_Url = 'http://einvoice-stage.allpay.com.tw/Notify/InvoiceNotify' ;
+	        	$Invoice_Url = 'https://einvoice-stage.allpay.com.tw/Notify/InvoiceNotify' ;
 		break;
 		case 'INVOICE_TRIGGER':
-	        	$Invoice_Url = 'http://einvoice-stage.allpay.com.tw/Invoice/TriggerIssue' ;
+	        	$Invoice_Url = 'https://einvoice-stage.allpay.com.tw/Invoice/TriggerIssue' ;
 		break;
 	}
 	
@@ -593,7 +593,7 @@ function ajax_query1()
 		
 		
 		
-		document.getElementById("invoice_url").innerHTML = "http://einvoice-stage.allpay.com.tw/Invoice/Issue";
+		document.getElementById("invoice_url").innerHTML = "https://einvoice-stage.allpay.com.tw/Invoice/Issue";
 	}
 	
 	if(select_invoice == 'INVOICE_DELAY')
@@ -643,7 +643,7 @@ function ajax_query1()
 		document.getElementById( "48" ).className = "td-mark";
 		document.getElementById( "49" ).className = "td-mark";
 		document.getElementById( "143" ).className = "td-mark";
-		document.getElementById("invoice_url").innerHTML = "http://einvoice-stage.allpay.com.tw/Invoice/DelayIssue";
+		document.getElementById("invoice_url").innerHTML = "https://einvoice-stage.allpay.com.tw/Invoice/DelayIssue";
 	}
 	
 	if(select_invoice == 'ALLOWANCE')
@@ -693,7 +693,7 @@ function ajax_query1()
 		document.getElementById( "48" ).className = "td-mark";
 		document.getElementById( "49" ).className = "td-mark";
 		document.getElementById( "143" ).className = "td-mark";
-		document.getElementById("invoice_url").innerHTML = "http://einvoice-stage.allpay.com.tw/Invoice/Allowance";
+		document.getElementById("invoice_url").innerHTML = "https://einvoice-stage.allpay.com.tw/Invoice/Allowance";
 	}
 	
 	if(select_invoice == 'INVOICE_VOID')
@@ -743,7 +743,7 @@ function ajax_query1()
 		document.getElementById( "48" ).className = "td-mark";
 		document.getElementById( "49" ).className = "td-mark";
 		document.getElementById( "143" ).className = "td-mark";
-		document.getElementById("invoice_url").innerHTML = "http://einvoice-stage.allpay.com.tw/Invoice/IssueInvalid";
+		document.getElementById("invoice_url").innerHTML = "https://einvoice-stage.allpay.com.tw/Invoice/IssueInvalid";
 	}
 	
 	if(select_invoice == 'ALLOWANCE_VOID')
@@ -793,7 +793,7 @@ function ajax_query1()
 		document.getElementById( "48" ).className = "td-mark";
 		document.getElementById( "49" ).className = "td-mark";
 		document.getElementById( "143" ).className = "td-mark";
-		document.getElementById("invoice_url").innerHTML = "http://einvoice-stage.allpay.com.tw/Invoice/AllowanceInvalid";
+		document.getElementById("invoice_url").innerHTML = "https://einvoice-stage.allpay.com.tw/Invoice/AllowanceInvalid";
 	}
 	
 	if(select_invoice == 'INVOICE_SEARCH' || select_invoice == 'INVOICE_VOID_SEARCH')
@@ -846,11 +846,11 @@ function ajax_query1()
 		
 		if(select_invoice == 'INVOICE_SEARCH' )
 		{
-			document.getElementById("invoice_url").innerHTML = "http://einvoice-stage.allpay.com.tw/Query/Issue";
+			document.getElementById("invoice_url").innerHTML = "https://einvoice-stage.allpay.com.tw/Query/Issue";
 		}
 		else
 		{
-			document.getElementById("invoice_url").innerHTML = "http://einvoice-stage.allpay.com.tw/Query/IssueInvalid";
+			document.getElementById("invoice_url").innerHTML = "https://einvoice-stage.allpay.com.tw/Query/IssueInvalid";
 		}
 	}
 	
@@ -904,11 +904,11 @@ function ajax_query1()
 		
 		if(select_invoice == 'ALLOWANCE_SEARCH' )
 		{
-			document.getElementById("invoice_url").innerHTML = "http://einvoice-stage.allpay.com.tw/Query/Allowance";
+			document.getElementById("invoice_url").innerHTML = "https://einvoice-stage.allpay.com.tw/Query/Allowance";
 		}
 		else
 		{
-			document.getElementById("invoice_url").innerHTML = "http://einvoice-stage.allpay.com.tw/Query/AllowanceInvalid";
+			document.getElementById("invoice_url").innerHTML = "https://einvoice-stage.allpay.com.tw/Query/AllowanceInvalid";
 		}
 	}
 	
@@ -960,7 +960,7 @@ function ajax_query1()
 		document.getElementById( "49" ).className = "td-left";
 		document.getElementById( "143" ).className = "td-mark";
 		
-		document.getElementById("invoice_url").innerHTML = "http://einvoice-stage.allpay.com.tw/Notify/InvoiceNotify";
+		document.getElementById("invoice_url").innerHTML = "https://einvoice-stage.allpay.com.tw/Notify/InvoiceNotify";
 	}
 	
 	if(select_invoice == 'INVOICE_TRIGGER')
@@ -1011,7 +1011,7 @@ function ajax_query1()
 		document.getElementById( "49" ).className = "td-mark";
 		document.getElementById( "143" ).className = "td-mark";
 		
-		document.getElementById("invoice_url").innerHTML = "http://einvoice-stage.allpay.com.tw/Invoice/TriggerIssue";
+		document.getElementById("invoice_url").innerHTML = "https://einvoice-stage.allpay.com.tw/Invoice/TriggerIssue";
 	}
 	
 }

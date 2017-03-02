@@ -7,7 +7,7 @@ try
 		$allpay_invoice = new AllInvoice ;
 // 2.寫入基本介接參數
 		$allpay_invoice->Invoice_Method 	= 'ALLOWANCE_VOID_SEARCH';
-		$allpay_invoice->Invoice_Url 		= 'http://einvoice-stage.allpay.com.tw/Query/AllowanceInvalid' ;
+		$allpay_invoice->Invoice_Url 		= 'https://einvoice-stage.allpay.com.tw/Query/AllowanceInvalid' ;
 		$allpay_invoice->MerchantID 		= '2000132' ;
 		$allpay_invoice->HashKey 		= 'ejCk326UnaZWKisg' ;
 		$allpay_invoice->HashIV 		= 'q9jcZX8Ib9LM8wYk' ;
