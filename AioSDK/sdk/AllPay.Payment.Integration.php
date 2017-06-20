@@ -975,28 +975,13 @@ class QueryTrade extends Aio
             $arParameters["CheckMacValue"] = CheckMacValue::generate($arParameters,$HashKey,$HashIV,$EncryptType);
             // 送出查詢並取回結果。
             $szResult = parent::ServerPost($arParameters,$ServiceURL);
-            $szResult = str_replace(' ', '%20', $szResult);
-            $szResult = str_replace('+', '%2B', $szResult);
             
             // 轉結果為陣列。
-            parse_str($szResult, $arResult);
-
+            $arResult = json_decode($szResult,true);
+            
             // 重新整理回傳參數。
             foreach ($arResult as $keys => $value) {
-                if ($keys == 'CheckMacValue') {
-                    $szCheckMacValue = $value;
-                } else {
-                    $arFeedback[$keys] = $value;
-                    $arConfirmArgs[$keys] = $value;
-                }
-            }
-
-            // 驗證檢查碼。
-            if (sizeof($arFeedback) > 0) {
-                $szConfirmMacValue = CheckMacValue::generate($arConfirmArgs,$HashKey,$HashIV,$EncryptType);
-                if ($szCheckMacValue != $szConfirmMacValue) {
-                    array_push($arErrors, 'CheckMacValue verify fail.');
-                }
+                $arFeedback[$keys] = $value;
             }
         }
 
@@ -1231,11 +1216,7 @@ Abstract class Verification
             //有設定統一編號的話，載具類別不可為合作特店載具或自然人憑證載具。
             $notPrint = array(CarruerType::Member, CarruerType::Citizen);
             if(strlen($arExtend['CustomerIdentifier']) > 0 && in_array($arExtend['CarruerType'], $notPrint)){
-                array_push($arErrors, "CarruerType should be None.");
-            }
-            // 若統一編號有值時，請設定列印(Yes)。
-            if(strlen($arExtend['CustomerIdentifier']) > 0 and $arExtend['Print'] == PrintMark::Yes) {
-                array_push($arErrors, "Print should be Yes.");
+                array_push($arErrors, "CarruerType should NOT be Member or Citizen.");
             }
         }
 
@@ -1333,12 +1314,9 @@ Abstract class Verification
             $arExtend['CarruerNum'] = '';
         } else {
             switch ($arExtend['CarruerType']) {
-                // 載具類別為無載具(None)或會員載具(Member)時，請設定空字串
+                // 載具類別為無載具(None)或會員載具(Member)時，系統自動忽略載具編號
                 case CarruerType::None:
                 case CarruerType::Member:
-                    if (strlen($arExtend['CarruerNum']) > 0) {
-                        array_push($arErrors, "Please remove CarruerNum.");
-                    }
                 break;
                 // 載具類別為買受人自然人憑證(Citizen)時，請設定自然人憑證號碼，前2碼為大小寫英文，後14碼為數字
                 case CarruerType::Citizen:
@@ -1528,7 +1506,7 @@ class allPay_Tenpay extends Verification
 class allPay_Credit extends Verification
 {
     public $arPayMentExtend = array(
-                                    "CreditInstallment" => 0,
+                                    "CreditInstallment" => '',
                                     "InstallmentAmount" => 0, 
                                     "Redeem"            => FALSE, 
                                     "PeriodAmount"      => '',
