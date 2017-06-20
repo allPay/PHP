@@ -1506,7 +1506,7 @@ class allPay_Tenpay extends Verification
 class allPay_Credit extends Verification
 {
     public $arPayMentExtend = array(
-                                    "CreditInstallment" => 0,
+                                    "CreditInstallment" => '',
                                     "InstallmentAmount" => 0, 
                                     "Redeem"            => FALSE, 
                                     "PeriodAmount"      => '',

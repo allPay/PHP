@@ -10,18 +10,15 @@
     	$obj = new AllInOne();
    
         //服務參數
-        $obj->ServiceURL  = "https://payment-stage.allpay.com.tw/Cashier/AioCheckOut/V4";   //服務位置
+        $obj->ServiceURL  = "https://payment-stage.allpay.com.tw/Cashier/AioCheckOut/V2";   //服務位置
         $obj->HashKey     = '5294y06JbISpM5x9' ;                                            //測試用Hashkey，請自行帶入AllPay提供的HashKey
         $obj->HashIV      = 'v77hoKGq4kWxNNIS' ;                                            //測試用HashIV，請自行帶入AllPay提供的HashIV
         $obj->MerchantID  = '2000132';                                                      //測試用MerchantID，請自行帶入AllPay提供的MerchantID
-        $obj->EncryptType = '1';                                                            //CheckMacValue加密類型，請固定填入1，使用SHA256加密
 
 
         //基本參數(請依系統規劃自行調整)
-        $MerchantTradeNo = "Test".time();
-        
         $obj->Send['ReturnURL']         = "http://www.allpay.com.tw/receive.php" ;    //付款完成通知回傳的網址
-        $obj->Send['MerchantTradeNo']   = $MerchantTradeNo;                           //訂單編號
+        $obj->Send['MerchantTradeNo']   = "Test".time() ;                             //訂單編號
         $obj->Send['MerchantTradeDate'] = date('Y/m/d H:i:s');                        //交易時間
         $obj->Send['TotalAmount']       = 2000;                                       //交易金額
         $obj->Send['TradeDesc']         = "good to drink" ;                           //交易描述
@@ -34,7 +31,7 @@
 
         //Credit信用卡分期付款延伸參數(可依系統需求選擇是否代入)
         //以下參數不可以跟信用卡定期定額參數一起設定
-        $obj->SendExtend['CreditInstallment'] = 0 ;    //分期期數，預設0(不分期)
+        $obj->SendExtend['CreditInstallment'] = '' ;    //分期期數，預設0(不分期)，信用卡分期可用參數為:3,6,12,18,24
         $obj->SendExtend['InstallmentAmount'] = 0 ;    //使用刷卡分期的付款金額，預設0(不分期)
         $obj->SendExtend['Redeem'] = false ;           //是否使用紅利折抵，預設false
         $obj->SendExtend['UnionPay'] = false;          //是否為聯營卡，預設false;
@@ -70,6 +67,7 @@
         //產生訂單(auto submit至AllPay)
         $obj->CheckOut();
 
+    
     } catch (Exception $e) {
     	echo $e->getMessage();
     } 
