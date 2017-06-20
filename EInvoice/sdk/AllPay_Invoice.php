@@ -8,37 +8,37 @@
 // 執行發票作業項目。
 abstract class InvoiceMethod
 {
-	// 一般開立發票。
+	// A一般開立發票。
     	const INVOICE = 'INVOICE';
 
-	// 延遲或觸發開立發票。
+	// B延遲或觸發開立發票。
     	const INVOICE_DELAY = 'INVOICE_DELAY';
 
-	// 開立折讓。
+	// C開立折讓。
     	const ALLOWANCE = 'ALLOWANCE';
 
-	// 發票作廢。
+	// D發票作廢。
     	const INVOICE_VOID = 'INVOICE_VOID';
 
-	// 折讓作廢。
+	// E折讓作廢。
     	const ALLOWANCE_VOID = 'ALLOWANCE_VOID';
     
-	// 查詢發票。
+	// F查詢發票。
     	const INVOICE_SEARCH = 'INVOICE_SEARCH';
     
-	// 查詢作廢發票。
+	// G查詢作廢發票。
     	const INVOICE_VOID_SEARCH = 'INVOICE_VOID_SEARCH';
     
-	// 查詢折讓明細。
+	// H查詢折讓明細。
     	const ALLOWANCE_SEARCH = 'ALLOWANCE_SEARCH';
     
-	// 查詢折讓作廢明細。
+	// I查詢折讓作廢明細。
     	const ALLOWANCE_VOID_SEARCH = 'ALLOWANCE_VOID_SEARCH';
      
-	// 發送通知。
+	// J發送通知。
 	const INVOICE_NOTIFY = 'INVOICE_NOTIFY';
     
-	// 付款完成觸發或延遲開立發票。
+	// K付款完成觸發或延遲開立發票。
 	const INVOICE_TRIGGER = 'INVOICE_TRIGGER';
 }
 
@@ -303,7 +303,7 @@ class AllInvoice
         	$sItemPrice		= '' ;		// 商品價格
         	$sItemTaxType		= '' ;		// 商品課稅別
         	$sItemAmount		= '' ;		// 商品合計
-        	$sItemRemark		= '' ;		// 商品備註	V1.0.3目前僅提供A.一般開立發票使用
+        	$sItemRemark		= '' ;		// 商品備註	V1.0.3目前僅提供 A.一般開立發票使用
         	$nItems_Foreach_Count	= 1 ;		// 商品計算
         	
 		// 參數檢查
@@ -358,8 +358,9 @@ class AllInvoice
 	        			$sItemPrice 	.= (int) $value['ItemPrice'] ;		
 	        			$sItemTaxType 	.= (isset($value['ItemTaxType'])) 	? $value['ItemTaxType'] : '' ;
 	        			$sItemAmount	.= (int) $value['ItemAmount'] ;
-	        			$sItemRemark 	.= (isset($value['ItemRemark'])) 	? $value['ItemRemark'] 	: '' ;
 	        			
+	        			$sItemRemark 	.= (isset($value['ItemRemark'])) 	? str_replace ('|', '##', $value['ItemRemark']) : '' ; // v1.1.4 
+
 	        			if( $nItems_Foreach_Count < $nItems_Count_Total )
 	        			{
 	        				$sItemName .= '|' ;
@@ -511,6 +512,8 @@ class AllInvoice
 				unset($aSend_Info['Notify']) ;
 				unset($aSend_Info['InvoiceTag']) ;
 				unset($aSend_Info['Notified']) ;
+
+				unset($aSend_Info['LoveCode']) ;
 				
 				// 3-2商品資訊組合
 				$nItems_Count_Total = count($this->Send['Items']) ;	// 商品總筆數
@@ -602,6 +605,7 @@ class AllInvoice
 				unset($aSend_Info['Notify']) ;
 				unset($aSend_Info['InvoiceTag']) ;
 				unset($aSend_Info['Notified']) ;
+
 				
 				// 3-2商品資訊組合
         			unset($aSend_Info['Items']) ;
@@ -661,6 +665,7 @@ class AllInvoice
 				unset($aSend_Info['Notify']) ;
 				unset($aSend_Info['InvoiceTag']) ;
 				unset($aSend_Info['Notified']) ;
+
 				
 				// 3-2商品資訊組合
         			unset($aSend_Info['Items']) ;
@@ -722,6 +727,7 @@ class AllInvoice
 				unset($aSend_Info['Notify']) ;
 				unset($aSend_Info['InvoiceTag']) ;
 				unset($aSend_Info['Notified']) ;
+
 				
 				// 3-2商品資訊組合
         			unset($aSend_Info['Items']) ;
@@ -897,9 +903,7 @@ class AllInvoice
 				$aSend_CheckMac_Info = $aSend_Info ;
 				
 				// 產生檢查碼
-				$aSend_Info['CheckMacValue'] = $this->GenerateCheckMacValue($aSend_CheckMac_Info) ;
-				
-				
+				$aSend_Info['CheckMacValue'] = $this->GenerateCheckMacValue($aSend_CheckMac_Info) ;	
 			}
 			
 			// 4.送出資訊
@@ -949,6 +953,10 @@ class AllInvoice
 						unset($aReturn_CheckMacValue['ItemWord']) ;
 						unset($aReturn_CheckMacValue['InvoiceRemark']) ;
 						unset($aReturn_CheckMacValue['ItemRemark']) ;
+
+						unset($aReturn_CheckMacValue['PosBarCode']) ;		// v1.2.3
+						unset($aReturn_CheckMacValue['QRCode_Left']) ;		// v1.2.1
+						unset($aReturn_CheckMacValue['QRCode_Right']) ;		// v1.2.1
 						
 						if($aReturn_Info['RtnCode'] == 1)
 						{
